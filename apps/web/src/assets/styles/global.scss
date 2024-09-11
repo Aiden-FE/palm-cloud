@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --app-foreground-rgb: 0, 0, 0;
+  --app-background-rgb: 255, 255, 255;
+}
+
+[data-theme='dark'] {
+  &:root {
+    --app-foreground-rgb: 255, 255, 255;
+    --app-background-rgb: 0, 0, 0;
+  }
+}
+
+html,
+body {
+  font-size: 14px;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  color: rgb(var(--app-foreground-rgb));
+  background: rgb(var(--app-background-rgb));
+}
