@@ -16,3 +16,7 @@ export function getAuthToken(code: string) {
     refresh_token: string;
   }>();
 }
+
+export function getWebsite(targetUrl: string) {
+  return api.chain().get('/api/v1/open/website').searchParams({ targetUrl }).request();
+}

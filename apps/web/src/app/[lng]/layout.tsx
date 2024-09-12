@@ -30,11 +30,11 @@ export default function RootLayout({
   return (
     <html lang={lng} dir={dir(lng)}>
       <body className={inter.className} suppressHydrationWarning>
-        <ContextStoreProvider>
-          <ThemeStoreProvider>
-            <NextUIProvider>{children}</NextUIProvider>
-          </ThemeStoreProvider>
-        </ContextStoreProvider>
+        <NextUIProvider>
+          <ContextStoreProvider>
+            <ThemeStoreProvider>{children}</ThemeStoreProvider>
+          </ContextStoreProvider>
+        </NextUIProvider>
       </body>
     </html>
   );

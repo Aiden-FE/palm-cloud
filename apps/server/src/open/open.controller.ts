@@ -15,4 +15,9 @@ export class OpenController {
   getAuthToken(@Body() body: GetAuthTokenBody) {
     return this.openService.getAuthToken(body.code);
   }
+
+  @Get('website')
+  getWebsite(@Query('targetUrl') targetUrl: string) {
+    return this.openService.getTargetUrlText(targetUrl);
+  }
 }
