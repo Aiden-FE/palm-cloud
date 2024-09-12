@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import Player from 'xgplayer';
 import 'xgplayer/dist/xgplayer.min.css';
 import LivePreset from 'xgplayer/es/presets/live';
-import { getVideos } from "@/api";
-import { Listbox, ListboxItem } from "@nextui-org/react";
+import { getVideos } from '@/api';
+import { Listbox, ListboxItem } from '@nextui-org/react';
 
 export default function VideoPage() {
   const [list, setList] = useState<any[]>([]);
@@ -46,13 +46,7 @@ export default function VideoPage() {
           <div id="mse"></div>
         </div>
         <Listbox aria-label="List" onAction={(key: any) => selectedVideo(key)}>
-          {
-            list?.map?.((item: any) => (
-              <ListboxItem key={item.name}>
-                {item.name}
-              </ListboxItem>
-            ))
-          }
+          {list?.map?.((item: any) => <ListboxItem key={item.name}>{item.name}</ListboxItem>)}
         </Listbox>
       </div>
     </div>

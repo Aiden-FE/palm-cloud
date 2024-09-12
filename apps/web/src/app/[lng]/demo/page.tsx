@@ -15,7 +15,7 @@ export default function Demo({ params: { lng } }: PageProps) {
       <div className={style['cp-block']}>
         block
         <div className={style['cp-block__element']}>
-        element
+          element
           <div className={style['cp-block__element_modifier']}>modifier</div>
         </div>
       </div>

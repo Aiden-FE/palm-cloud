@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OssModule } from './oss/oss.module';
+import { OpenModule } from './open/open.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { OssModule } from './oss/oss.module';
       },
     ]),
     OssModule,
+    OpenModule,
     // EmailModule.forRoot({}),
     // RedisModule.forRoot({
     //   url: 'redis://127.0.0.1:6379',

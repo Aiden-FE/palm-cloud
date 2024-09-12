@@ -25,8 +25,14 @@ export interface EnvironmentVariablesDto {
   MINIO_SECRET_KEY: string;
   MINIO_PORT?: number;
   MINIO_ENABLE_SSL?: boolean;
+
+  CASDOOR_CLIENT_ID: string;
+  CASDOOR_CLIENT_SECRET: string;
+  CASDOOR_CERTIFICATE: string;
 }
 
 // 与默认值合并后的环境变量声明
 export type EnvironmentVariables = EnvironmentVariablesDto &
-  Required<Pick<EnvironmentVariablesDto, 'NODE_ENV' | 'APP_THROTTLE_TTL' | 'APP_THROTTLE_LIMIT' | 'APP_PRIVATE_SECRET'>>;
+  Required<
+    Pick<EnvironmentVariablesDto, 'NODE_ENV' | 'APP_THROTTLE_TTL' | 'APP_THROTTLE_LIMIT' | 'APP_PRIVATE_SECRET'>
+  >;

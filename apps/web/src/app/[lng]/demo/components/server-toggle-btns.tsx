@@ -1,7 +1,7 @@
 'use client';
 
-import { AvailableLanguages } from "@/config";
-import { useClientTranslation } from "@/i18n/client";
+import { AvailableLanguages } from '@/config';
+import { useClientTranslation } from '@/i18n/client';
 
 export default function ServerToggleBtns() {
   const { changeLanguage } = useClientTranslation();
@@ -27,5 +27,5 @@ export default function ServerToggleBtns() {
         Use javascript to toggle English
       </button>
     </>
-  )
+  );
 }

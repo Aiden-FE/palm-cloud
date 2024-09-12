@@ -15,6 +15,6 @@ import { getEnvConfig } from '@app/common';
     }),
   ],
   controllers: [OssController],
-  providers: [OssService]
+  providers: [OssService],
 })
 export class OssModule {}

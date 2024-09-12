@@ -38,7 +38,16 @@ const schema: JSONSchemaType<EnvironmentVariables> = {
     MINIO_ENABLE_SSL: {
       type: 'boolean',
       nullable: true,
-    }
+    },
+    CASDOOR_CLIENT_ID: {
+      type: 'string',
+    },
+    CASDOOR_CLIENT_SECRET: {
+      type: 'string',
+    },
+    CASDOOR_CERTIFICATE: {
+      type: 'string',
+    },
   },
 } as JSONSchemaType<EnvironmentVariables>;
 
@@ -73,9 +82,7 @@ export function getEnvConfig<Key extends keyof EnvironmentVariables, DefaultValu
   key: Key,
   defaultValue: DefaultValue,
 ): EnvironmentVariables[Key] | DefaultValue;
-export function getEnvConfig<Key extends keyof EnvironmentVariables>(
-  key: Key,
-): EnvironmentVariables[Key];
+export function getEnvConfig<Key extends keyof EnvironmentVariables>(key: Key): EnvironmentVariables[Key];
 export function getEnvConfig(): EnvironmentVariables;
 export function getEnvConfig<Key extends keyof EnvironmentVariables, DefaultValue = unknown>(
   key?: Key,
