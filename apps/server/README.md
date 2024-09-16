@@ -1,5 +1,5 @@
 <!-- TOC -->
-- [server](#projectname)
+- [palm-cloud-server](#projectname)
   - [特性](#特性)
     - [支持读取配置文件](#支持读取配置文件)
     - [Typescript/Jest/Airbnb Eslint/Prettier](#typescriptjestairbnb-eslintprettier)
@@ -19,7 +19,7 @@
     - [支持Mysql](#支持mysql)
 <!-- TOC -->
 
-# server
+# palm-cloud-server
 > 
 
 ## 特性

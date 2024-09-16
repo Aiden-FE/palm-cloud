@@ -2,12 +2,11 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { getEnvConfig, ThrottlerBehindProxyGuard } from '@app/common';
 import { APP_GUARD } from '@nestjs/core';
-// import { MysqlModule } from '@app/mysql';
-// import { EmailModule } from '@app/email';
-// import { RedisModule } from '@app/redis';
+import { MysqlModule } from '@app/mysql';
+import { EmailModule } from '@app/email';
+import { RedisModule } from '@app/redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { OssModule } from './oss/oss.module';
 import { OpenModule } from './open/open.module';
 
 @Module({
@@ -21,13 +20,27 @@ import { OpenModule } from './open/open.module';
         limit: getEnvConfig('APP_THROTTLE_LIMIT'),
       },
     ]),
-    OssModule,
+    EmailModule.forRoot({
+      host: getEnvConfig('EMAIL_HOST'),
+      port: getEnvConfig('EMAIL_PORT'),
+      auth: {
+        user: getEnvConfig('EMAIL_USER'),
+        pass: getEnvConfig('EMAIL_PASSWORD'),
+      },
+      from: getEnvConfig('EMAIL_FROM'),
+    }),
+    RedisModule.forRoot({
+      url: getEnvConfig('REDIS_CONNECTION_URL'),
+    }),
+    MysqlModule.forRoot({
+      host: getEnvConfig('MYSQL_HOST'),
+      port: getEnvConfig('MYSQL_PORT'),
+      user: getEnvConfig('MYSQL_USER'),
+      password: getEnvConfig('MYSQL_PASSWORD'),
+      database: getEnvConfig('MYSQL_DATABASE'),
+      multipleStatements: true, // 允许多语句,以便读取sql文件执行
+    }),
     OpenModule,
-    // EmailModule.forRoot({}),
-    // RedisModule.forRoot({
-    //   url: 'redis://127.0.0.1:6379',
-    // }),
-    // MysqlModule.forRoot({})
   ],
   controllers: [AppController],
   providers: [

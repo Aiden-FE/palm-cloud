@@ -1,6 +1,6 @@
 import { cloneDeep, get, merge } from 'lodash';
 import { EnvironmentVariables } from '@app/common/interfaces';
-import Ajv, { JSONSchemaType } from 'ajv';
+import Ajv from 'ajv';
 import { parse as dotenvParse } from 'dotenv';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -12,7 +12,7 @@ const ajv = new Ajv({
   coerceTypes: true, // 类型转换
 });
 
-const schema: JSONSchemaType<EnvironmentVariables> = {
+const schema = {
   type: 'object',
   properties: {
     NODE_ENV: {
@@ -27,29 +27,22 @@ const schema: JSONSchemaType<EnvironmentVariables> = {
       type: 'integer',
       default: 60,
     },
-    APP_PRIVATE_SECRET: {
-      type: 'string',
-      default: Date.now().toString(),
-    },
-    MINIO_PORT: {
-      type: 'integer',
-      nullable: true,
-    },
-    MINIO_ENABLE_SSL: {
-      type: 'boolean',
-      nullable: true,
-    },
-    CASDOOR_CLIENT_ID: {
-      type: 'string',
-    },
-    CASDOOR_CLIENT_SECRET: {
-      type: 'string',
-    },
-    CASDOOR_CERTIFICATE: {
-      type: 'string',
-    },
+    APP_PRIVATE_SECRET: { type: 'string' },
+    APP_PUBLIC_SECRET: { type: 'string' },
+    APP_SALT_SECRET: { type: 'string' },
+    MYSQL_HOST: { type: 'string' },
+    MYSQL_PORT: { type: 'integer' },
+    MYSQL_USER: { type: 'string' },
+    MYSQL_PASSWORD: { type: 'string' },
+    MYSQL_DATABASE: { type: 'string' },
+    REDIS_CONNECTION_URL: { type: 'string' },
+    EMAIL_HOST: { type: 'string' },
+    EMAIL_PORT: { type: 'number' },
+    EMAIL_USER: { type: 'string' },
+    EMAIL_PASSWORD: { type: 'string' },
+    EMAIL_FROM: { type: 'string' },
   },
-} as JSONSchemaType<EnvironmentVariables>;
+};
 
 const validateEnv = ajv.compile(schema);
 let isInit = false;

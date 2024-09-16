@@ -1,23 +1,37 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { OpenService } from './open.service';
-import { GetAuthTokenBody } from './open.dto';
+import { CaptchaEmailBodyDto } from './open.dto';
+import { BusinessStatus, HttpResponse } from '@app/common';
 
 @Controller('open')
 export class OpenController {
-  constructor(private readonly openService: OpenService) {}
+  constructor(private readonly service: OpenService) {}
 
-  @Get('login-url')
-  getLoginUrl(@Query('redirectUri') redirectUri: string) {
-    return this.openService.getLoginUrl(redirectUri);
+  @Post('captcha/email')
+  async getEmailCaptcha(@Body() body: CaptchaEmailBodyDto) {
+    const result = await this.service.validateImageCaptcha(body.captcha, body.captchaKey);
+    if (result === -1) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '未获取验证码或已过期',
+      });
+    }
+    if (result === 0) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '验证码错误',
+      });
+    }
+
+    await this.service.sendEmailCaptcha(body.email);
+
+    return new HttpResponse({
+      message: '邮箱验证码已发送',
+    });
   }
 
-  @Post('auth-token')
-  getAuthToken(@Body() body: GetAuthTokenBody) {
-    return this.openService.getAuthToken(body.code);
-  }
-
-  @Get('website')
-  getWebsite(@Query('targetUrl') targetUrl: string) {
-    return this.openService.getTargetUrlText(targetUrl);
+  @Get('captcha/image')
+  getImageCaptcha() {
+    return this.service.getImageCaptcha();
   }
 }

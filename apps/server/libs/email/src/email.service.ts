@@ -1,12 +1,15 @@
 import { INestApplication, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { createTransport } from 'nodemailer';
-import { EmailTransporter, EmailTransportParams } from './email.dto';
+import { EmailTransporter } from './email.dto';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
   public client: EmailTransporter;
 
-  constructor(private option: EmailTransportParams[0], private defaultOption?: EmailTransportParams[1]) {}
+  constructor(
+    private option: any,
+    private defaultOption?: any,
+  ) {}
 
   async onModuleInit() {
     this.client = createTransport(this.option, this.defaultOption);

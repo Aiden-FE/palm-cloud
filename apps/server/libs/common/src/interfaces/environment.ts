@@ -15,20 +15,25 @@ export interface EnvironmentVariablesDto {
    */
   APP_THROTTLE_LIMIT?: number;
   /**
-   * 应用隐私数据密钥, 默认值仅用于演示,生产请勿使用默认值
-   * @default Date.now().toString()
+   * 应用隐私数据密钥 请通过`pnpm generate:key`来获取公私钥
    */
-  APP_PRIVATE_SECRET?: string;
+  APP_PRIVATE_SECRET: string;
+  APP_PUBLIC_SECRET: string;
+  APP_SALT_SECRET: string;
 
-  MINIO_END_POINT: string;
-  MINIO_ACCESS_KEY: string;
-  MINIO_SECRET_KEY: string;
-  MINIO_PORT?: number;
-  MINIO_ENABLE_SSL?: boolean;
+  MYSQL_HOST: string;
+  MYSQL_PORT: number;
+  MYSQL_USER: string;
+  MYSQL_PASSWORD: string;
+  MYSQL_DATABASE: string;
 
-  CASDOOR_CLIENT_ID: string;
-  CASDOOR_CLIENT_SECRET: string;
-  CASDOOR_CERTIFICATE: string;
+  REDIS_CONNECTION_URL: string;
+
+  EMAIL_HOST: string;
+  EMAIL_PORT: number;
+  EMAIL_USER: string;
+  EMAIL_PASSWORD: string;
+  EMAIL_FROM: string;
 }
 
 // 与默认值合并后的环境变量声明

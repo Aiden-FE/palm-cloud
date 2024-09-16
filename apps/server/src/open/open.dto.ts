@@ -1,6 +1,16 @@
-import { IsString } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 
-export class GetAuthTokenBody {
+export class CaptchaEmailBodyDto {
+  /** 邮箱账号 */
   @IsString()
-  code: string;
+  @IsEmail()
+  email: string;
+
+  /** 验证码 */
+  @IsString()
+  captcha: string;
+
+  /** 验证码 key */
+  @IsString()
+  captchaKey: string;
 }

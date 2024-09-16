@@ -19,42 +19,16 @@
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
     "paths": {
-      "@app/common": [
-        "libs/common/src"
-      ],
-      "@app/common/*": [
-        "libs/common/src/*"
-      ],
-      "@app/redis": [
-        "libs/redis/src"
-      ],
-      "@app/redis/*": [
-        "libs/redis/src/*"
-      ],
-      "@app/email": [
-        "libs/email/src"
-      ],
-      "@app/email/*": [
-        "libs/email/src/*"
-      ],
-      "@app/google-recaptcha": [
-        "libs/google-recaptcha/src"
-      ],
-      "@app/google-recaptcha/*": [
-        "libs/google-recaptcha/src/*"
-      ],
-      "@app/mysql": [
-        "libs/mysql/src"
-      ],
-      "@app/mysql/*": [
-        "libs/mysql/src/*"
-      ],
-      "@app/minio": [
-        "libs/minio/src"
-      ],
-      "@app/minio/*": [
-        "libs/minio/src/*"
-      ]
+      "@app/common": ["libs/common/src"],
+      "@app/common/*": ["libs/common/src/*"],
+      "@app/redis": ["libs/redis/src"],
+      "@app/redis/*": ["libs/redis/src/*"],
+      "@app/email": ["libs/email/src"],
+      "@app/email/*": ["libs/email/src/*"],
+      "@app/google-recaptcha": ["libs/google-recaptcha/src"],
+      "@app/google-recaptcha/*": ["libs/google-recaptcha/src/*"],
+      "@app/mysql": ["libs/mysql/src"],
+      "@app/mysql/*": ["libs/mysql/src/*"]
     }
   }
 }

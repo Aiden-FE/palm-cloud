@@ -1,9 +1,5 @@
 {
-  "moduleFileExtensions": [
-    "js",
-    "json",
-    "ts"
-  ],
+  "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
@@ -20,8 +16,6 @@
     "@app/google-recaptcha/(.*)": "<rootDir>/../libs/google-recaptcha/src/$1",
     "@app/google-recaptcha": "<rootDir>/../libs/google-recaptcha/src",
     "@app/mysql/(.*)": "<rootDir>/../libs/mysql/src/$1",
-    "@app/mysql": "<rootDir>/../libs/mysql/src",
-    "@app/minio/(.*)": "<rootDir>/../libs/minio/src/$1",
-    "@app/minio": "<rootDir>/../libs/minio/src"
+    "@app/mysql": "<rootDir>/../libs/mysql/src"
   }
 }
