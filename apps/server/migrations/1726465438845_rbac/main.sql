@@ -39,7 +39,7 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE
   `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `uid` VARCHAR(128) NOT NULL COMMENT '用户唯一uid',
+    `uid` CHAR(36) NOT NULL DEFAULT(UUID()) COMMENT '用户唯一uid',
     `enabled` BOOLEAN NOT NULL DEFAULT true COMMENT '是否启用',
     `country_code` VARCHAR(8) NOT NULL DEFAULT '86' COMMENT '国家代码',
     `telephone` VARCHAR(20) NULL COMMENT '手机号码',

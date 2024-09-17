@@ -1,11 +1,21 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { OpenService } from './open.service';
-import { CaptchaEmailBodyDto } from './open.dto';
+import { CaptchaEmailBodyDto, LoginEmailBodyDto, RegisterEmailBodyDto } from './open.dto';
 import { BusinessStatus, HttpResponse } from '@app/common';
 
 @Controller('open')
 export class OpenController {
   constructor(private readonly service: OpenService) {}
+
+  @Post('login/email')
+  login(@Body() body: LoginEmailBodyDto) {
+    return true;
+  }
+
+  @Post('register/email')
+  registerByEmail(@Body() body: RegisterEmailBodyDto) {
+    return this.service.registerByEmail(body);
+  }
 
   @Post('captcha/email')
   async getEmailCaptcha(@Body() body: CaptchaEmailBodyDto) {
@@ -23,11 +33,7 @@ export class OpenController {
       });
     }
 
-    await this.service.sendEmailCaptcha(body.email);
-
-    return new HttpResponse({
-      message: '邮箱验证码已发送',
-    });
+    return this.service.sendEmailCaptcha(body.email);
   }
 
   @Get('captcha/image')

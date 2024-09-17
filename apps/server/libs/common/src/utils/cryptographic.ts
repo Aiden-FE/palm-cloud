@@ -7,7 +7,17 @@ export function generateSHA256(data: string) {
   return crypto
     .createHash('sha256')
     .update(`${data}_${getEnvConfig('APP_THROTTLE_LIMIT')}`)
-    .digest('hex');
+    .digest('hex')
+    .toString();
+}
+
+/** 生成不可逆md5 */
+export function generateMD5(data: string) {
+  return crypto
+    .createHash('md5')
+    .update(`${data}_${getEnvConfig('APP_THROTTLE_LIMIT')}`)
+    .digest('hex')
+    .toString();
 }
 
 /**

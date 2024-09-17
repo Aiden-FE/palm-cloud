@@ -14,3 +14,20 @@ export class CaptchaEmailBodyDto {
   @IsString()
   captchaKey: string;
 }
+
+export class RegisterEmailBodyDto {
+  /** 邮箱账号 */
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  /** 密码 */
+  @IsString()
+  password: string;
+
+  /** 验证码 */
+  @IsString()
+  captcha: string;
+}
+
+export class LoginEmailBodyDto extends RegisterEmailBodyDto {}
