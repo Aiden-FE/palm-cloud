@@ -12,7 +12,7 @@ export class EmailService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.client = createTransport(this.option, this.defaultOption);
+    this.client = createTransport(this.option, this.defaultOption) as any;
     Logger.log('Email service is readied', 'EmailClient');
   }
 

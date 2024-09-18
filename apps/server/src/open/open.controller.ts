@@ -9,7 +9,7 @@ export class OpenController {
 
   @Post('login/email')
   login(@Body() body: LoginEmailBodyDto) {
-    return true;
+    return this.service.loginByEmail(body);
   }
 
   @Post('register/email')

@@ -30,4 +30,8 @@ export class RegisterEmailBodyDto {
   captcha: string;
 }
 
-export class LoginEmailBodyDto extends RegisterEmailBodyDto {}
+export class LoginEmailBodyDto extends RegisterEmailBodyDto {
+  /** 验证码 key */
+  @IsString()
+  captchaKey: string;
+}

@@ -3,8 +3,9 @@ import { EmailService } from '@app/email';
 import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
 import * as svgCaptcha from 'svg-captcha';
-import { RegisterEmailBodyDto } from './open.dto';
+import { LoginEmailBodyDto, RegisterEmailBodyDto } from './open.dto';
 import { MysqlService } from '@app/mysql';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class OpenService {
@@ -12,7 +13,28 @@ export class OpenService {
     private readonly redisService: RedisService,
     private readonly emailService: EmailService,
     private readonly mysqlService: MysqlService,
+    private readonly usersService: UsersService,
   ) {}
+
+  async loginByEmail(body: LoginEmailBodyDto) {
+    const valid = await this.validateImageCaptcha(body.captcha, body.captchaKey);
+    if (valid === -1) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '验证码已过期,请重新获取',
+      });
+    } else if (valid === 0) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '验证码错误',
+      });
+    }
+    const user = await this.usersService.queryUserInfo({
+      email: body.email,
+      password: body.password,
+    });
+    return user;
+  }
 
   async registerByEmail(body: RegisterEmailBodyDto) {
     const emailCode = await this.redisService.client.get(`open_captcha_email_${body.email}`);

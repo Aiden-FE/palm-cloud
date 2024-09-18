@@ -8,6 +8,7 @@ import { RedisModule } from '@app/redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OpenModule } from './open/open.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { OpenModule } from './open/open.module';
       multipleStatements: true, // 允许多语句,以便读取sql文件执行
     }),
     OpenModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
