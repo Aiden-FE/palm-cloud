@@ -41,6 +41,10 @@ const schema = {
     EMAIL_USER: { type: 'string' },
     EMAIL_PASSWORD: { type: 'string' },
     EMAIL_FROM: { type: 'string' },
+    APP_JWT_EXPIRES: {
+      type: 'string',
+      default: '14d',
+    },
   },
 };
 

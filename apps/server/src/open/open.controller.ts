@@ -1,8 +1,9 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { OpenService } from './open.service';
 import { CaptchaEmailBodyDto, LoginEmailBodyDto, RegisterEmailBodyDto } from './open.dto';
-import { BusinessStatus, HttpResponse } from '@app/common';
+import { BusinessStatus, HttpResponse, Public } from '@app/common';
 
+@Public()
 @Controller('open')
 export class OpenController {
   constructor(private readonly service: OpenService) {}

@@ -3,9 +3,10 @@ import { EmailService } from '@app/email';
 import { RedisService } from '@app/redis';
 import { Injectable, Logger } from '@nestjs/common';
 import * as svgCaptcha from 'svg-captcha';
-import { LoginEmailBodyDto, RegisterEmailBodyDto } from './open.dto';
+import { JwtService } from '@nestjs/jwt';
 import { MysqlService } from '@app/mysql';
 import { UsersService } from 'src/users/users.service';
+import { LoginEmailBodyDto, RegisterEmailBodyDto } from './open.dto';
 
 @Injectable()
 export class OpenService {
@@ -14,6 +15,7 @@ export class OpenService {
     private readonly emailService: EmailService,
     private readonly mysqlService: MysqlService,
     private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async loginByEmail(body: LoginEmailBodyDto) {
@@ -29,11 +31,24 @@ export class OpenService {
         message: '验证码错误',
       });
     }
-    const user = await this.usersService.queryUserInfo({
-      email: body.email,
-      password: body.password,
-    });
-    return user;
+    const user = await this.usersService.queryUserInfo(
+      {
+        email: body.email,
+        password: body.password,
+      },
+      { includes: ['roles'] },
+    );
+    if (!user) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '邮箱或密码错误',
+      });
+    }
+
+    return {
+      ...user,
+      token: this.jwtService.sign(user, { expiresIn: getEnvConfig('APP_JWT_EXPIRES') }),
+    };
   }
 
   async registerByEmail(body: RegisterEmailBodyDto) {

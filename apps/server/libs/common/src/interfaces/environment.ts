@@ -20,6 +20,7 @@ export interface EnvironmentVariablesDto {
   APP_PRIVATE_SECRET: string;
   APP_PUBLIC_SECRET: string;
   APP_SALT_SECRET: string;
+  APP_JWT_EXPIRES?: string;
 
   MYSQL_HOST: string;
   MYSQL_PORT: number;

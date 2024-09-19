@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { getEnvConfig, ThrottlerBehindProxyGuard } from '@app/common';
+import { getEnvConfig, JWTAuthGuard, ThrottlerBehindProxyGuard } from '@app/common';
 import { APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import { MysqlModule } from '@app/mysql';
 import { EmailModule } from '@app/email';
 import { RedisModule } from '@app/redis';
@@ -9,6 +10,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OpenModule } from './open/open.module';
 import { UsersModule } from './users/users.module';
+import { ResourcesModule } from './resources/resources.module';
 
 @Module({
   imports: [
@@ -41,8 +43,12 @@ import { UsersModule } from './users/users.module';
       database: getEnvConfig('MYSQL_DATABASE'),
       multipleStatements: true, // 允许多语句,以便读取sql文件执行
     }),
+    JwtModule.register({
+      secret: getEnvConfig('APP_SALT_SECRET'),
+    }),
     OpenModule,
     UsersModule,
+    ResourcesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -50,6 +56,10 @@ import { UsersModule } from './users/users.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerBehindProxyGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JWTAuthGuard,
     },
   ],
 })
