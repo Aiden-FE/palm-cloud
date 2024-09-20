@@ -42,7 +42,7 @@ SET
 
 CREATE TABLE
   `resource_tags` (
-    `id` INTEGER NOTNULL AUTO_INCREMENT,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(16) NOT NULL COMMENT '标签显示名称',
     `color` VARCHAR(16) NOT NULL COMMENT '标签颜色',
     `ownerId` INTEGER NOT NULL COMMENT '标签拥有者',
