@@ -1,10 +1,21 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { dir } from 'i18next';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
+import { Roboto } from 'next/font/google';
+import { ThemeProvider } from '@mui/material/styles';
 import { ThemeStoreProvider } from '@/providers/theme-store';
 import { Languages } from '@/config';
 import { PageProps } from '@/interfaces';
 import '@/assets/styles/global.scss';
+import MuiTheme from '@/config/mui-theme';
+
+const roboto = Roboto({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-roboto',
+});
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,9 +37,13 @@ export default function RootLayout({
   }
 >) {
   return (
-    <html lang={lng} dir={dir(lng)}>
+    <html className={roboto.variable} lang={lng} dir={dir(lng)}>
       <body className={inter.className} suppressHydrationWarning>
-        <ThemeStoreProvider>{children}</ThemeStoreProvider>
+        <AppRouterCacheProvider>
+          <ThemeProvider theme={MuiTheme}>
+            <ThemeStoreProvider>{children}</ThemeStoreProvider>
+          </ThemeProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
