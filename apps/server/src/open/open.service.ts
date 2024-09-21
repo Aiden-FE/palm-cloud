@@ -130,7 +130,7 @@ export class OpenService {
     if (!code) {
       return -1;
     }
-    return code === value ? 1 : 0;
+    return code.toLocaleLowerCase() === value.toLocaleLowerCase() ? 1 : 0;
   }
 
   async getImageCaptcha() {

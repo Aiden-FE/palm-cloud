@@ -2,10 +2,7 @@ module.exports = {
   parserOptions: {
     project: 'tsconfig.json',
   },
-  extends: [
-    '@compass-aiden/eslint-config/nest',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['@compass-aiden/eslint-config/nest', 'plugin:prettier/recommended'],
   root: true,
   env: {
     node: true,

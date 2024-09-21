@@ -31,7 +31,7 @@ export default class ResponseInterceptor implements NestInterceptor {
             statusCode: BusinessStatus.INTERNAL_SERVER_ERROR,
             message: 'Server internal error',
           });
-          Logger.warn(err);
+          Logger.warn((err as any)?.response || err);
         }
         httpRespCtx.status(resp.getHttpStatus());
         return of(resp.getResponse());

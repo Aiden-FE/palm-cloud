@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { AvailableLanguages } from '@/config';
-
-export interface PageProps {
-  params: { lng: AvailableLanguages };
+export interface UserInfo {
+  uid: string;
+  email: string;
+  country_code?: string;
+  telephone?: string;
+  name?: string;
+  nickname?: string;
+  gender?: string;
+  birthday?: string;
+  roles: string[];
+  token: string;
 }
-
-export interface AppComponentProps {
-  lng?: AvailableLanguages;
-}
-
-export type MiddlewareCallback = (() => NextResponse<unknown>) | undefined;

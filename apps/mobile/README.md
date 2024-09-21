@@ -1,378 +1,169 @@
-# mobile
-
+# mobile2
 > 
+
+- [mobile2](#projectname)
+  - [Features](#features)
+    - [主题使用](#主题使用)
+    - [状态管理](#状态管理)
+    - [网络请求](#网络请求)
+    - [样式相关](#样式相关)
+    - [SVG 使用](#svg-使用)
+    - [Icon 使用](#icon-使用)
+    - [国际化](#国际化)
 
 ## Features
 
-### 支持 Sass,Postcss,autoprefixer,tailwindcss
+### 主题使用
 
-示例如下:
+基于 [官方主题](https://uniapp.dcloud.net.cn/tutorial/darkmode.html) 方案实现,`theme.json`文件位于根目录
 
-```tsx
-import style from './index.module.scss';
+并支持添加'--<变量名>'的 key 来为页面绑定 CSS 变量以便实现动态主题相关
 
-export default function Demo() {
-  return (
-    <div className="w-full h-full">
-      <h2 className="text-xl font-semibold">BEM&ModuleCSS&Scss&Tailwindcss 展示</h2>
-      <div className={style['cp-block']}>
-        block
-        <div className={style['cp-block__element']}>
-        element
-          <div className={style['cp-block__element_modifier']}>modifier</div>
-        </div>
-      </div>
-      <h2 className="text-xl font-semibold">autoprefixer 展示</h2>
-      <div className="origin-top-left rotate-12 w-[80px] h-[80px] bg-[yellow]"></div>
-    </div>
-  );
-}
+```vue
+<script lang="ts" setup>
+import { useThemeStore } from '@/stores';
+
+const { currentThemeData } = storeToRefs(useThemeStore());
+
+</script>
+
+<template>
+  <view class="app-examples" :style="currentThemeData">
+    主题变量绑定在根即可
+  </view>
+</template>
 ```
 
-### 支持BEM
+### 状态管理
 
-示例如下:
+采用 [官方状态管理](https://uniapp.dcloud.net.cn/tutorial/vue3-pinia.html#%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86-pinia) 方案,该方案基于 pinia 而来.
 
-*index.module.scss*文件内容:
+创建一个新的状态管理可参考`src/stores/context.ts`文件,并在`src/stores/index.ts`中导出
 
-```scss
-// 第二个参数控制的是前缀默认前缀是全局 $domain 值
-@include b(block) { // cp-block  cp前缀可修改variables.scss内的$domain变量来变更
-  font-size: 20px;
-  @include e(element) { // cp-block__element
-    font-size: 16px;
-    @include m(modifier) { // cp-block__element_modifier
-      font-size: 12px;
-    }
-  }
-}
+业务中使用参考如下:
+
+```vue
+<script lang="ts" setup>
+import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useContextStore } from '@/stores';
+
+const { context } = storeToRefs(useContextStore());
+const { updateContext } = useContextStore();
+
+const usernameValue = ref('');
+</script>
+
+<template>
+  <view class="app-examples">
+    <h3>状态管理示例</h3>
+    <view class="app-examples__content">
+      <input v-model="usernameValue" style="border: 4rpx solid green;" placeholder="请输入用户名" />
+      <button @click="updateContext({ userInfo: { username: usernameValue } })">点击更新用户名</button>
+      <p style="font-size: 32rpx;">
+        当前 username 是:
+        <strong>
+          {{ context?.userInfo?.username || '未设置用户名' }}
+        </strong>
+      </p>
+    </view>
+  </view>
+</template>
 ```
 
-组件用法:
+### 网络请求
 
-```tsx
-import style from './index.module.scss';
+全局请求及响应拦截器位于`src/api/core.ts`内,可根据业务情况自行修改
 
-export default function Demo() {
-  return (
-    <div className="w-full h-full">
-      <h2 className="text-xl font-semibold">BEM&ModuleCSS&Scss&Tailwindcss 展示</h2>
-      <div className={style['cp-block']}>
-        block
-        <div className={style['cp-block__element']}>
-        element
-          <div className={style['cp-block__element_modifier']}>modifier</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-> 如果需要更换 `cp` 作用域前缀请修改 `src/assets/styles/variables.scss` 文件内容的$domain值
-
-
-### 支持 Icon及 Svg 使用
-
-基于 [Iconify](https://iconify.design/docs/) 实现,所有[IconSets](https://icon-sets.iconify.design/)图标均可直接使用,内部按需加载,并且支持直接使用项目内部的svg文件
-
-示例如下:
-
-```tsx
-import Image from 'next/image';
-import AppIcon from '@/components/app-icon/app-icon';
-import SettingSvg from '@/assets/svgs/setting.svg';
-import SettingSvgUrl from '@/assets/svgs/setting.svg?url';
-
-function ExamplePage() {
-  return (
-    <>
-      {/* 使用 IconSets 所有图标 */}
-      <AppIcon className="text-4xl" icon="mdi-light:home" />
-      {/* 使用业务特有的 svg 图标文件 */}
-      <SettingSvg className="text-4xl" />
-      {/* 使用svg url模式结合 image 使用 */}
-      <Image src={SettingSvgUrl} className="w-9 h-9" alt="This is the settings icon." />
-    </>
-  );
-}
-
-export default ExamplePage;
-```
-
-### 支持Zustand状态管理
-
-创建及使用zustand参考如下使用方式:
-
-创建store
+定义一个请求方法可以参考`src/api/index.ts`内的geUserInfo实现
 
 ```typescript
-// src/stores/theme.ts
-import { createStore } from 'zustand/vanilla'
-
-export type ThemeState = {}
-
-export type ThemeActions = {}
-
-export type ThemeStore = ThemeState & ThemeActions
-
-export const createDefaultThemeState = () => ({} as ThemeState);
-
-export const createThemeStore = (
-  initState: ThemeState = createDefaultThemeState(),
-) => {
-  return createStore<ThemeStore>()((set) => ({
-    ...initState,
-    // some actions
-  }));
+/** 获取用户信息 */
+export async function geUserInfo(): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/user/info',
+    // 可以在 meta 上追加自定义参数以便全局拦截器精确控制
+    // meta: {},
+  });
 }
 ```
 
-创建注入器
+### 样式相关
 
-```typescript
-// src/providers/theme-store.ts
-'use client';
+默认支持 Scss 预处理样式,类命名建议遵循 [BEM](https://getbem.com/) 规范
 
-import { type ReactNode, createContext, useRef, useContext, useEffect } from 'react';
-import { type StoreApi, useStore } from 'zustand';
-import { type ThemeStore, createThemeStore, createDefaultThemeState } from '@/stores/theme';
+移动端需要适配不同设备大小的元素建议 px 均换成 rpx 单位实现
 
-export const ThemeStoreContext = createContext<StoreApi<ThemeStore> | null>(
-  null,
-);
+详见 [官方说明](https://uniapp.dcloud.net.cn/tutorial/syntax-css.html#%E5%B0%BA%E5%AF%B8%E5%8D%95%E4%BD%8D)
 
-export interface ThemeStoreProviderProps {
-  children: ReactNode;
-}
+如需在大屏上保持移动端展示态,可在`src/pages.json`中配置`globalStyle`的`maxWidth`即可,如设计稿为 750 宽度,可以配置为 750
 
-export const ThemeStoreProvider = ({
-  children,
-}: ThemeStoreProviderProps) => {
-  const storeRef = useRef<StoreApi<ThemeStore>>();
-  if (!storeRef.current) {
-    storeRef.current = createThemeStore(createDefaultThemeState());
-  }
+### SVG 使用
 
-  return (
-    <ThemeStoreContext.Provider value={storeRef.current}>
-      {children}
-    </ThemeStoreContext.Provider>
-  );
-};
+项目内置了 [vite-svg-loader](https://github.com/jpkleemans/vite-svg-loader) 支持.
 
-export const useThemeStore = <T = ThemeStore,>(
-  selector: (store: ThemeStore) => T,
-): T => {
-  const themeStoreContext = useContext(ThemeStoreContext);
+svg 资源默认放在 `src/assets/svg` 文件夹下.
 
-  if (!themeStoreContext) {
-    throw new Error(`useThemeStore must be use within ThemeStoreProvider`);
-  }
+使用时如下:
 
-  return useStore(themeStoreContext, selector);
-};
+```vue
+<script setup>
+import MyIcon from '@/assets/svg/arrow.svg'; // 默认会将svg资源以组件模式导入
+import MyIconURL from '@/assets/svg/arrow.svg?url'; // 以url方式引用资源
+import MyIconRaw from '@/assets/svg/arrow.svg?raw'; // 以原始xml标签方式引用资源
+</script>
+
+<template>
+  <MyIcon />
+  <img :src="MyIconURL" />
+  <MyIconRaw />
+</template>
 ```
 
-使用注入器
+### Icon 使用
 
-```typescript
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ThemeStoreProvider } from "@/providers/theme-store";
-import "@/assets/styles/global.scss";
+项目内置了 [unplugin-icons](https://github.com/antfu/unplugin-icons), 请参考文档使用
 
-const inter = Inter({ subsets: ["latin"] });
+所有 icon 支持自动导入,无需手动 import,类似如下方式直接使用即可:
 
-export const metadata: Metadata = {
-  title: "Create Next App",
-  description: "Generated by create next app",
-};
+在 https://icon-sets.iconify.design/ 可以直接搜索所有 icon 资源,antd 的 icon 也一样存在,建议优先选用 AntDesign 的 icon
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={inter.className} suppressHydrationWarning={true}>
-        <ThemeStoreProvider>
-          {children}
-        </ThemeStoreProvider>
-      </body>
-    </html>
-  );
-}
-```
+更多用法参考 [unplugin-icons](https://github.com/antfu/unplugin-icons) 官方文档即可
 
-业务组件使用
-
-```typescript
-'use client';
-import { useThemeStore } from '@/providers/theme-store';
-
-export default function ThemeExample() {
-  const { currentTheme } = useThemeStore((state) => state.currentTheme);
-
-  return (
-    <div>
-      {currentTheme}
-    </div>
-  );
-}
-```
-
-### 主题
-
-主题预设两种,为`light`、`dark`,可使用Api设置为跟随系统主题,默认跟随主题
-
-要扩展主题下对应的CSS变量,请修改`src/assets/styles/global.scss`文件,修改`:root`和`[data-theme="dark"]`两个选择器内对应的css变量
-
-使用示例如下:
-
-```tsx
-'use client';
-import { useThemeStore } from '@/providers/theme-store';
-
-export default function ThemeExample() {
-  const { currentTheme, setTheme, getCurrentThemeValueByKey, getCurrentThemeValues } = useThemeStore((state) => state);
-
-  // 主动切换主题
-  function toggleTheme() {
-    setTheme(currentTheme === 'light' ? 'dark' : 'light');
-  }
-
-  // 设置为跟随系统主题
-  function setSystemTheme() {
-    setTheme('system');
-  }
-  
-  // 根据当前主题打印主题值
-  function consoleThemeValue() {
-    // 打印特定变量名的主题值
-    console.log('获取特定key值', getCurrentThemeValueByKey('--foreground-rgb'));
-    // 打印所有css变量值
-    console.log('获取所有CSS变量', getCurrentThemeValues());
-    // 打印所有"--background"前缀的CSS变量
-    console.log('获取所有"--background"前缀的CSS变量', getCurrentThemeValues(/^--background.*$/));
-  }
-  
-  return (
-    <div>
-      {currentTheme}
-      <br />
-      <button onClick={toggleTheme} className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600">切换主题</button>
-      <button onClick={setSystemTheme} className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600">使用系统主题</button>
-      <button onClick={consoleThemeValue} className="px-4 py-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600">控制台打印主题变量</button>
-    </div>
-  );
-}
+```vue
+<template>
+  <i-ant-design-caret-down-outlined />
+  <i-mdi-account />
+  <i-fa-solid-dice-five />
+  <i-heroicons-outline-menu-alt-2 />
+  <i-ri-apps-2-line />
+  <i-mdi-dice-d12 />
+  <i-mdi-light-alarm />
+  <i-noto-v1-flag-for-flag-japan />
+  <i-ic-twotone-24mp />
+  <i-mdi:cactus />
+  <i-twemoji-1st-place-medal />
+</template>
 ```
 
 ### 国际化
 
-客户端组件使用示例:
-```tsx
-'use client';
-import { useClientTranslation } from '@/i18n/client';
-import { AvailableLanguages } from '@/config';
+采用 [官方策略](https://uniapp.dcloud.net.cn/tutorial/i18n.html) 实现
 
-function ClientI18nExample() {
-  const { t, i18n, changeLanguage } = useClientTranslation();
+在`src/locale`找到对应语言的 json 添加语言key,key 建议为可读的英文字符串.以便在不支持的语言环境默认展示可读内容.
 
-  return (
-    <div>
-      {t('The current language is', { lang: i18n.resolvedLanguage })}
-      <br />
-      <div>
-        <button
-          className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-          onClick={() => changeLanguage(AvailableLanguages.ZH)}
-          type="button"
-        >
-          使用中文
-        </button>
-        <button
-          className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-          onClick={() => changeLanguage(AvailableLanguages.EN)}
-          type="button"
-        >
-          Use English
-        </button>
-      </div>
-    </div>
-  );
-}
-export default ClientI18nExample;
-```
+语言表内添加 key 后,在业务中使用如下:
 
-服务端组件使用示例:
-```tsx
-import { useServerTranslation } from '@/i18n/server';
-import { AvailableLanguages } from '@/config';
-import Link from 'next/link';
-import { AppComponentProps } from '@/interfaces';
-import ServerToggleBtns from './server-toggle-btns';
+```vue
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
 
-async function I18nExample({ lng }: AppComponentProps) {
-  const { t, i18n } = await useServerTranslation(lng || AvailableLanguages.ZH);
+const { t } = useI18n();
+</script>
 
-  return (
-    <div>
-      {t('The current language is', { lang: i18n.resolvedLanguage })}
-      <br />
-      <div>
-        <Link
-          className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-          href={`/${AvailableLanguages.ZH}/demo`}
-        >
-          link方式 使用中文
-        </Link>
-        <Link
-          className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-          href={`/${AvailableLanguages.EN}/demo`}
-        >
-          Use link to toggle English
-        </Link>
-        <ServerToggleBtns />
-      </div>
-    </div>
-  );
-}
-
-export default I18nExample;
-
-// ./server-toggle-btns 代码如下
-'use client';
-
-import { AvailableLanguages } from "@/config";
-import { useClientTranslation } from "@/i18n/client";
-
-export default function ServerToggleBtns() {
-  const { changeLanguage } = useClientTranslation();
-
-  function onClickChangeLanguage(lang: AvailableLanguages) {
-    changeLanguage(lang);
-  }
-
-  return (
-    <>
-      <button
-        className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-        onClick={() => onClickChangeLanguage(AvailableLanguages.ZH)}
-        type="button"
-      >
-        编程方式切换中文
-      </button>
-      <button
-        className="px-4 py-2 mr-2 font-semibold text-sm text-white rounded-md shadow-sm bg-sky-500 hover:bg-sky-600"
-        onClick={() => onClickChangeLanguage(AvailableLanguages.EN)}
-        type="button"
-      >
-        Use javascript to toggle English
-      </button>
-    </>
-  )
-}
+<template>
+  <h3>I18n 国际化使用展示</h3>
+  <view>{{ t('This is an example') }}</view>
+</template>
 ```
