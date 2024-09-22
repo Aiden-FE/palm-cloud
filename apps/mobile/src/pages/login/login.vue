@@ -2,7 +2,7 @@
 import { reactive, ref, toRaw } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useContextStore } from '@/stores';
-import { getImageCaptcha, loginByEmail } from '@/api';
+import { Open } from '@/api';
 
 const { isLogin } = storeToRefs(useContextStore());
 const { updateContext } = useContextStore();
@@ -27,7 +27,7 @@ if (isLogin.value) {
 }
 
 function getImgCaptcha() {
-  getImageCaptcha()
+  Open.getImageCaptcha()
     .then((res) => {
       formState.captchaKey = res.key;
       captchaSvg.value = res.data;
@@ -45,13 +45,17 @@ getImgCaptcha();
 
 async function submit() {
   await formRef.value.validate();
-  loginByEmail(toRaw(formState)).then((result) => {
-    updateContext({
-      token: result.token,
-      userInfo: result,
+  Open.loginByEmail(toRaw(formState))
+    .then((result) => {
+      updateContext({
+        token: result.token,
+        userInfo: result,
+      });
+      uni.switchTab({ url: '/pages/index/index' });
+    })
+    .catch(() => {
+      getImgCaptcha();
     });
-    uni.switchTab({ url: '/pages/index/index' });
-  });
 }
 </script>
 

@@ -13,7 +13,7 @@ export function addRequestInterceptor() {
       if (!req.header) req.header = {};
       // 统一追加鉴权参数
       if (token) {
-        req.header.Authorization = token.startsWith('bearer') ? token : `bearer ${token}`;
+        req.header.Authorization = token;
       }
     },
   });

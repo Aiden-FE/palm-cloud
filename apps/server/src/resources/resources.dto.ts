@@ -1,34 +1,12 @@
-export interface ResourceFolders {
-  id: number;
-  name: string;
-  parentId: number | -1;
-  size: number;
-  ownerId: number;
-  createdAt: Date;
-  updatedAt: Date;
+import { IsNumber, IsOptional } from 'class-validator';
+
+export class ResourcesBodyDto {
+  @IsOptional()
+  @IsNumber()
+  folderId?: number;
 }
 
-export interface Resources {
+export class ResourceInfoBodyDto {
+  @IsNumber()
   id: number;
-  name: string;
-  filePath: string;
-  size: number;
-  folderId: number | -1;
-  ownerId: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ResourceTags {
-  id: number;
-  name: string;
-  ownerId: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface ResourceToTags {
-  id: number;
-  resourceId: number;
-  tagId: number;
 }

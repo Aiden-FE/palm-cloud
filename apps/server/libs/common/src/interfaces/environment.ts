@@ -35,6 +35,12 @@ export interface EnvironmentVariablesDto {
   EMAIL_USER: string;
   EMAIL_PASSWORD: string;
   EMAIL_FROM: string;
+
+  MINIO_ENDPOINT: string;
+  MINIO_ACCESS_KEY: string;
+  MINIO_SECRET_KEY: string;
+  MINIO_PORT?: number;
+  MINIO_USE_SSL?: boolean;
 }
 
 // 与默认值合并后的环境变量声明

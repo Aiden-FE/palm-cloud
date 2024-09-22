@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { MysqlModule } from '@app/mysql';
 import { EmailModule } from '@app/email';
 import { RedisModule } from '@app/redis';
+import { MinioModule } from '@app/minio';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { OpenModule } from './open/open.module';
@@ -44,7 +45,15 @@ import { ResourcesModule } from './resources/resources.module';
       multipleStatements: true, // 允许多语句,以便读取sql文件执行
     }),
     JwtModule.register({
+      global: true,
       secret: getEnvConfig('APP_SALT_SECRET'),
+    }),
+    MinioModule.forRoot({
+      endPoint: getEnvConfig('MINIO_ENDPOINT'),
+      port: getEnvConfig('MINIO_PORT'),
+      accessKey: getEnvConfig('MINIO_ACCESS_KEY'),
+      secretKey: getEnvConfig('MINIO_SECRET_KEY'),
+      useSSL: getEnvConfig('MINIO_USE_SSL'),
     }),
     OpenModule,
     UsersModule,

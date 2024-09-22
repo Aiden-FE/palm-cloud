@@ -10,7 +10,12 @@
     {
       "path": "pages/resources/resources",
       "style": {
-        "navigationBarTitleText": "文件"
+        "navigationBarTitleText": "文件",
+        "app-plus": {
+          "pullToRefresh": {
+            "support": true
+          }
+        }
       }
     },
     {
@@ -23,6 +28,12 @@
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "/pages/resource/resource",
+      "style": {
+        "navigationBarTitleText": "文件详情"
       }
     }
   ],

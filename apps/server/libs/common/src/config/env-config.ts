@@ -45,6 +45,11 @@ const schema = {
       type: 'string',
       default: '14d',
     },
+    MINIO_ENDPOINT: { type: 'string' },
+    MINIO_ACCESS_KEY: { type: 'string' },
+    MINIO_SECRET_KEY: { type: 'string' },
+    MINIO_PORT: { type: 'integer', nullable: true },
+    MINIO_USE_SSL: { type: 'boolean', nullable: true },
   },
 };
 
