@@ -66,7 +66,7 @@ async function submit() {
         <uv-input v-model="formState.email" border="none" placeholder="请输入邮箱账号" />
       </uv-form-item>
       <uv-form-item label="密码" prop="password" border-bottom>
-        <uv-input v-model="formState.password" border="none" placeholder="请输入密码" />
+        <uv-input v-model="formState.password" type="password" border="none" placeholder="请输入密码" />
       </uv-form-item>
       <uv-form-item label="验证码" prop="captcha" border-bottom>
         <uv-input v-model="formState.captcha" border="none" placeholder="请输入验证码" />

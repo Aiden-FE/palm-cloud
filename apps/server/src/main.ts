@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import * as fastifyMultipart from '@fastify/multipart';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ResponseInterceptor, VALIDATION_OPTION, LoggerMiddleware } from '@app/common';
@@ -38,7 +39,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, apiDocOptions);
   SwaggerModule.setup('/api/docs', app, document);
-
+  app.register(fastifyMultipart);
   // 当部署在容器环境下,如果希望外部或其他容器访问,应当指定地址为0.0.0.0
   await app.listen(8080, '0.0.0.0');
 }

@@ -15,3 +15,14 @@ export function getResourceById(id: number): Promise<any> {
     data: { id },
   });
 }
+
+export function uploadResources(files: FormData): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: `/api/v1/resources/upload`,
+    header: {
+      'Content-Type': 'multipart/form-data',
+    },
+    data: files,
+  });
+}

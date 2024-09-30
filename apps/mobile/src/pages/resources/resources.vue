@@ -22,12 +22,25 @@ function openCreatePanel() {
   popupRef.value.open();
 }
 
-function onAfterRead(event: any) {
-  console.log('Debug file: ', event);
-}
-
-function onClickItem(item: any) {
-  console.log('Debug: ', item);
+function onClickItem(item: string) {
+  switch (item) {
+    case 'folder':
+      break;
+    case 'uploadImage':
+      uni.chooseImage({
+        sizeType: 'original',
+        success: ({ tempFiles }) => {
+          const formData = new FormData();
+          (tempFiles as File[]).forEach((file: File, index) => formData.append(`files[${index}]`, file));
+          Resources.uploadResources(formData);
+        },
+      });
+      break;
+    case 'uploadVideo':
+      break;
+    default:
+      break;
+  }
 }
 
 onPullDownRefresh(() => {
@@ -66,18 +79,18 @@ getList();
     </template>
     <uv-popup ref="popupRef" mode="bottom">
       <div class="resources__add-panel">
-        <uv-grid :border="false">
-          <uv-grid-item>
-            <uv-upload :file-list="[]" name="photo" :max-count="1" @after-read="onAfterRead">
-              <uv-icon name="photo" :size="48"></uv-icon>
-              <text>上传图片</text>
-            </uv-upload>
+        <uv-grid @click="onClickItem" :border="false">
+          <uv-grid-item name="folder">
+            <uv-icon name="folder" :size="36"></uv-icon>
+            <text>创建文件夹</text>
           </uv-grid-item>
-          <uv-grid-item>
-            <uv-upload :file-list="[]" name="video" :max-count="1" @after-read="onAfterRead">
-              <uv-icon name="camera" :size="48"></uv-icon>
-              <text>上传视频</text>
-            </uv-upload>
+          <uv-grid-item name="uploadImage">
+            <uv-icon name="photo" :size="36"></uv-icon>
+            <text>上传图片</text>
+          </uv-grid-item>
+          <uv-grid-item name="uploadVideo">
+            <uv-icon name="camera" :size="36"></uv-icon>
+            <text>上传视频</text>
           </uv-grid-item>
         </uv-grid>
       </div>
