@@ -7,13 +7,21 @@ import { Resources } from '@/api';
 
 const { isLogin } = storeToRefs(useContextStore());
 const list = ref([] as any[]);
+const imageUrlList = ref<string[]>([]);
 const keyword = ref('');
 const popupRef = ref();
+const videoInfo = ref({
+  visible: false,
+  url: '',
+});
 
 function getList() {
   return Resources.getResourceList()
     .then((res) => {
       list.value = res || [];
+      imageUrlList.value = res
+        .filter((item: { fileType: string; url: string }) => item.fileType?.startsWith('image'))
+        .map((item: { id: number; url: string }) => item.url);
     })
     .finally(() => uni.stopPullDownRefresh());
 }
@@ -29,10 +37,20 @@ function onClickItem(item: string) {
     case 'uploadImage':
       uni.chooseImage({
         sizeType: 'original',
-        success: ({ tempFiles }) => {
-          const formData = new FormData();
-          (tempFiles as File[]).forEach((file: File, index) => formData.append(`files[${index}]`, file));
-          Resources.uploadResources(formData);
+        count: 1,
+        success: async ({ tempFiles }) => {
+          const file = (tempFiles as any)[0];
+          const taskId = await Resources.createUploadTask({
+            filename: file.name,
+            filesize: file.size,
+            filetype: file.type,
+          });
+          console.log('Upload task id is: ', taskId);
+          await Resources.uploadResources({
+            name: file.name,
+            filePath: file.path,
+            file,
+          });
         },
       });
       break;
@@ -40,6 +58,23 @@ function onClickItem(item: string) {
       break;
     default:
       break;
+  }
+}
+
+function onClickData(item: any) {
+  if (item.fileType?.startsWith('image')) {
+    uni.previewImage({
+      current: item.url,
+      urls: [item.url],
+    });
+  } else if (item.fileType?.startsWith('video')) {
+    videoInfo.value.url = item.url;
+    videoInfo.value.visible = true;
+  } else {
+    uni.showToast({
+      title: '暂不支持预览',
+      icon: 'none',
+    });
   }
 }
 
@@ -56,13 +91,7 @@ getList();
       <div>
         <uv-search placeholder="可根据关键字筛选" v-model="keyword" :show-action="false"></uv-search>
         <uv-list v-if="list.length">
-          <uv-list-item
-            v-for="item in list"
-            :key="item.id"
-            clickable
-            :to="`/pages/resource/resource?id=${item.id}`"
-            :title="item.name"
-          />
+          <uv-list-item v-for="item in list" :key="item.id" clickable @click="onClickData(item)" :title="item.name" />
         </uv-list>
         <uv-empty v-else mode="list" style="margin-top: 32rpx" />
       </div>
@@ -95,6 +124,13 @@ getList();
         </uv-grid>
       </div>
     </uv-popup>
+    <uv-overlay :show="videoInfo.visible" @click="videoInfo.visible = false">
+      <view class="warp">
+        <view class="rect" @tap.stop>
+          <video v-if="videoInfo.visible" :src="videoInfo.url"></video>
+        </view>
+      </view>
+    </uv-overlay>
   </div>
 </template>
 
@@ -102,6 +138,17 @@ getList();
 .resources {
   width: 100%;
   height: 100%;
+  .warp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  .rect {
+    width: 100%;
+    max-height: 70vh;
+    background-color: #fff;
+  }
   &__add {
     position: fixed;
     right: 32rpx;

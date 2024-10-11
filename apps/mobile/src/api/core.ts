@@ -1,19 +1,30 @@
 import { useContextStore } from '@/stores';
 import RequestSuccessCallbackResult = UniNamespace.RequestSuccessCallbackResult;
 
+export const API_HOST = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : 'http://localhost:8080';
+
+export function getRequestConfig(): any {
+  const { getContext } = useContextStore();
+  const token = getContext('token', '');
+  return {
+    apiHost: API_HOST,
+    headers: {
+      Authorization: token,
+    },
+  };
+}
+
 export function addRequestInterceptor() {
   uni.addInterceptor('request', {
     invoke(req) {
-      const { getContext } = useContextStore();
-      const token = getContext('token', '');
-      const baseUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : 'http://localhost:8080';
+      const { apiHost, headers } = getRequestConfig();
       if (req.url.startsWith('/')) {
-        req.url = `${baseUrl}${req.url}`;
+        req.url = `${apiHost}${req.url}`;
       }
       if (!req.header) req.header = {};
       // 统一追加鉴权参数
-      if (token) {
-        req.header.Authorization = token;
+      if (headers.Authorization) {
+        req.header.Authorization = headers.Authorization;
       }
     },
   });

@@ -70,6 +70,8 @@
   },
   "vueVersion": "3",
   "h5": {
-    "router": "histroy"
+    "router": {
+      "mode": "history"
+    }
   }
 }
