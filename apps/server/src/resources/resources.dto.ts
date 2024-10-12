@@ -4,6 +4,10 @@ export class ResourcesBodyDto {
   @IsOptional()
   @IsNumber()
   folderId?: number;
+
+  @IsOptional()
+  @IsString()
+  filetype?: string;
 }
 
 export class ResourceInfoBodyDto {

@@ -1,6 +1,6 @@
 import { getRequestConfig } from './core';
 
-export function getResourceList(params?: { folderId?: number }): Promise<any> {
+export function getResourceList(params?: { folderId?: number; filetype?: string }): Promise<any> {
   return uni.request({
     method: 'POST',
     url: '/api/v1/resources',

@@ -1,7 +1,7 @@
 import { useContextStore } from '@/stores';
 import RequestSuccessCallbackResult = UniNamespace.RequestSuccessCallbackResult;
 
-export const API_HOST = process.env.NODE_ENV === 'development' ? 'http://localhost:8080' : 'http://localhost:8080';
+export const API_HOST = import.meta.env.VITE_API_HOST || 'http://localhost:8080';
 
 export function getRequestConfig(): any {
   const { getContext } = useContextStore();

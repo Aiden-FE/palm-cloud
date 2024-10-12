@@ -7,6 +7,7 @@ export {};
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    DropDown: typeof import('./components/drop-down/drop-down.vue')['default']
     IAntDesignCaretDownOutlined: typeof import('~icons/ant-design/caret-down-outlined')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

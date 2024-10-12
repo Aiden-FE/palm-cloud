@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, HttpStatus, HttpException, Inject } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { AUTH_KEY, IS_PUBLIC_KEY } from '@app/common';
 import { FastifyRequest } from 'fastify';
@@ -43,19 +42,23 @@ export default class JWTAuthGuard implements CanActivate {
         throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
       }
     } else {
-      const decodeUser = await this.jwtService.verify(req.headers.authorization);
-      if (decodeUser.roles?.length) {
-        const [result] = await this.mysqlService.client.query(
-          'SELECT * FROM `_role_permissions`  WHERE role_id IN (?)',
-          [decodeUser.roles],
-        );
-        decodeUser.permissions = result?.[0].map((item) => item.permission_key) || [];
-      } else {
-        decodeUser.permissions = [];
-      }
+      try {
+        const decodeUser = await this.jwtService.verify(req.headers.authorization);
+        if (decodeUser.roles?.length) {
+          const [result] = await this.mysqlService.client.query(
+            'SELECT * FROM `_role_permissions`  WHERE role_id IN (?)',
+            [decodeUser.roles],
+          );
+          decodeUser.permissions = result?.[0].map((item) => item.permission_key) || [];
+        } else {
+          decodeUser.permissions = [];
+        }
 
-      await this.redisService.client.set(tokenKey, JSON.stringify(decodeUser), { PX: 1000 * 60 * 60 });
-      user = decodeUser;
+        await this.redisService.client.set(tokenKey, JSON.stringify(decodeUser), { PX: 1000 * 60 * 60 });
+        user = decodeUser;
+      } catch {
+        throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+      }
     }
     // const rpcCtx = context.switchToRpc();
     // const { user } = rpcCtx.getData();

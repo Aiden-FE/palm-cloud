@@ -90,11 +90,18 @@ export class ResourcesService {
     return result;
   }
 
-  async getResourcesList(uid: string, folderId = -1) {
-    const [result] = await this.mysqlService.client.query(
-      'SELECT * FROM resources WHERE folderId = ? AND ownerId = ?',
-      [folderId, uid],
-    );
+  async getResourcesList(uid: string, folderId = -1, fileType?: string) {
+    let sql = 'SELECT * FROM resources WHERE folderId = ? AND ownerId = ?';
+    const params = [folderId, uid];
+    if (fileType) {
+      if (fileType !== 'other') {
+        sql += ' AND fileType LIKE ?';
+        params.push(`%${fileType}%`);
+      } else {
+        sql += " AND fileType NOT LIKE '%video%' AND fileType NOT LIKE '%image%'";
+      }
+    }
+    const [result] = await this.mysqlService.client.query(sql, params);
     const resp = [] as any[];
     for (const item of result as any[]) {
       const url = await this.minioService.client.presignedGetObject(item.bucketName, item.filePath, 60 * 60);

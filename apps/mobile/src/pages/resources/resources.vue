@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia';
 import { onPullDownRefresh } from '@dcloudio/uni-app';
 import { useContextStore } from '@/stores';
 import { Resources } from '@/api';
+import DropDown from '@/components/drop-down/drop-down.vue';
 
 const { isLogin } = storeToRefs(useContextStore());
 const list = ref([] as any[]);
@@ -14,13 +15,63 @@ const videoInfo = ref({
   visible: false,
   url: '',
 });
+const dropForm = ref({
+  filetype: '',
+  tags: '',
+});
+const dropItems = ref([
+  {
+    label: '文件类型',
+    key: 'filetype',
+    options: [
+      {
+        label: '全部文件',
+        value: '',
+      },
+      {
+        label: '图片',
+        value: 'image',
+      },
+      {
+        label: '视频',
+        value: 'video',
+      },
+      {
+        label: '其他',
+        value: 'other',
+      },
+    ],
+  },
+  {
+    label: '标签',
+    key: 'tags',
+    options: [
+      {
+        label: '全部标签',
+        value: '',
+      },
+      {
+        label: '标签1',
+        value: '1',
+      },
+      {
+        label: '标签2',
+        value: '2',
+      },
+      {
+        label: '标签3',
+        value: '3',
+      },
+    ],
+  },
+]);
 
 function getList() {
-  return Resources.getResourceList()
+  return Resources.getResourceList({ filetype: dropForm.value.filetype })
     .then((res) => {
       list.value = res || [];
       imageUrlList.value = res
-        .filter((item: { fileType: string; url: string }) => item.fileType?.startsWith('image'))
+        .filter((item: { filetype: string; url: string }) => item.filetype?.startsWith('image'))
         .map((item: { id: number; url: string }) => item.url);
     })
     .finally(() => uni.stopPullDownRefresh());
@@ -127,17 +178,23 @@ function onClickData(item: any) {
   }
 }
 
+function onFilterChange(val: { form: Record<string, any>; key: string; value: any }) {
+  dropForm.value[val.key as 'filetype' | 'tags'] = val.value;
+  getList();
+}
+
 onPullDownRefresh(() => {
-  // getList();
+  getList();
 });
 
-// getList();
+getList();
 </script>
 
 <template>
   <div class="resources">
     <template v-if="isLogin">
       <div>
+        <DropDown :items="dropItems" :default-form="dropForm" @change="onFilterChange" />
         <uv-search placeholder="可根据关键字筛选" v-model="keyword" :show-action="false"></uv-search>
         <uv-list v-if="list.length">
           <uv-list-item v-for="item in list" :key="item.id" clickable @click="onClickData(item)" :title="item.name" />
@@ -197,11 +254,14 @@ onPullDownRefresh(() => {
     width: 100%;
     max-height: 70vh;
     background-color: #fff;
+    video {
+      width: 100%;
+    }
   }
   &__add {
     position: fixed;
     right: 32rpx;
-    bottom: 128rpx;
+    bottom: calc(env(safe-area-inset-bottom) + 128rpx);
     &-panel {
       padding: 32rpx 32rpx 128rpx;
     }

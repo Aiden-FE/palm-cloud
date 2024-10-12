@@ -23,7 +23,7 @@ export class ResourcesController {
   @Post()
   getResourcesList(@Headers('Authorization') token: string, @Body() body: ResourcesBodyDto) {
     const { uid } = this.jwtService.decode(token);
-    return this.service.getResourcesList(uid, body.folderId);
+    return this.service.getResourcesList(uid, body.folderId, body.filetype);
   }
 
   @Post('upload/create')
