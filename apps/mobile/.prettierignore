@@ -22,3 +22,5 @@ package-lock.json
 .eslintcache
 temp
 node_modules
+
+components.d.ts
