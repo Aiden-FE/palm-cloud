@@ -30,6 +30,30 @@ function openCreatePanel() {
   popupRef.value.open();
 }
 
+const blobToArrayBuffer = (blob: any) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+    reader.readAsArrayBuffer(blob);
+  });
+
+async function sliceChunk(file: File, chunkSize: number) {
+  const chunks = [];
+  const total = Math.ceil(file.size / chunkSize);
+  for (let i = 0; i < total; i += 1) {
+    const start = i * chunkSize;
+    const end = Math.min(file.size, start + chunkSize);
+    chunks.push(file.slice(start, end));
+  }
+  return {
+    chunks,
+    total,
+  };
+}
+
 function onClickItem(item: string) {
   switch (item) {
     case 'folder':
@@ -39,17 +63,42 @@ function onClickItem(item: string) {
         sizeType: 'original',
         count: 1,
         success: async ({ tempFiles }) => {
-          const file = (tempFiles as any)[0];
-          const taskId = await Resources.createUploadTask({
+          const file = (tempFiles as File[])[0];
+          const { total, chunks } = await sliceChunk(file, 1024 * 1024); // 1MB
+          const { taskId, chunkStatus } = await Resources.createUploadTask({
             filename: file.name,
             filesize: file.size,
             filetype: file.type,
+            chunkStatus: Array(total).fill(0),
+            folderId: 1,
           });
-          console.log('Upload task id is: ', taskId);
-          await Resources.uploadResources({
-            name: file.name,
-            filePath: file.path,
-            file,
+          const taskPromises = [] as Promise<unknown>[];
+          const uploadStatus = [...chunkStatus];
+          chunks.forEach((chunk, index) => {
+            // 已上传的分片则跳过
+            if (uploadStatus[index]) {
+              return;
+            }
+            const formData = new FormData();
+            formData.append('file', chunk);
+            taskPromises.push(
+              Resources.uploadResourceChunk(
+                {
+                  name: 'file',
+                  file,
+                },
+                {
+                  taskId,
+                  chunkIndex: index,
+                  length: chunk.size,
+                },
+              ).then(() => {
+                uploadStatus[index] = 1;
+              }),
+            );
+          });
+          await Promise.all(taskPromises).then(async () => {
+            await Resources.finishUploadResource({ taskId });
           });
         },
       });
@@ -79,10 +128,10 @@ function onClickData(item: any) {
 }
 
 onPullDownRefresh(() => {
-  getList();
+  // getList();
 });
 
-getList();
+// getList();
 </script>
 
 <template>

@@ -1,11 +1,12 @@
 import { Controller, Post, Headers, Body, Req } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ResourcesService } from './resources.service';
-import { ResourceInfoBodyDto, ResourcesBodyDto, CreateUploadTaskBodyDto } from './resources.dto';
+import { ResourceInfoBodyDto, ResourcesBodyDto, CreateUploadTaskBodyDto, MergeChunksBodyDto } from './resources.dto';
 import { FastifyRequest } from 'fastify';
 import { pipeline } from 'node:stream/promises';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, writeFileSync } from 'node:fs';
 import { BusinessStatus, HttpResponse } from '@app/common';
+import { MultipartValue } from '@fastify/multipart';
 
 @Controller('resources')
 export class ResourcesController {
@@ -48,19 +49,42 @@ export class ResourcesController {
       ownerId: uid,
       size: body.filesize,
       type: body.filetype,
+      chunkStatus: body.chunkStatus,
     });
   }
 
-  @Post('upload')
-  async uploadResource(@Req() req: FastifyRequest) {
-    const data = await req.file();
+  @Post('upload/chunk')
+  async uploadResource(@Req() req: FastifyRequest, @Headers('Authorization') token: string) {
+    const { uid } = this.jwtService.decode(token);
+    const data = await req.file({ limits: { fileSize: 1024 * 1024 * 2 } });
     if (!data) {
       return new HttpResponse({
         statusCode: BusinessStatus.BAD_REQUEST,
         message: '文件不存在',
       });
     }
-    await pipeline(data.file, createWriteStream(`./tmp/${data.filename}`, { flush: true }));
-    return true;
+    const taskId = (data.fields?.taskId as MultipartValue)?.value as string;
+    const chunkIndex = (data.fields?.chunkIndex as MultipartValue)?.value as string;
+    if (!taskId || !chunkIndex) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '参数错误',
+      });
+    }
+    return await this.service.saveChunk({
+      taskId,
+      chunkIndex: Number(chunkIndex),
+      buffer: await data.toBuffer(),
+      ownerId: uid,
+    });
+  }
+
+  @Post('upload/merge')
+  async mergeResource(@Headers('Authorization') token: string, @Body() body: MergeChunksBodyDto) {
+    const { uid } = this.jwtService.decode(token);
+    return this.service.mergeChunks({
+      taskId: body.taskId,
+      ownerId: uid,
+    });
   }
 }
