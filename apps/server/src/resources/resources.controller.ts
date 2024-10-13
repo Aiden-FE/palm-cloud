@@ -1,10 +1,15 @@
-import { Controller, Post, Headers, Body, Req } from '@nestjs/common';
+import { Controller, Post, Headers, Body, Req, Get, Query } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ResourcesService } from './resources.service';
-import { ResourceInfoBodyDto, ResourcesBodyDto, CreateUploadTaskBodyDto, MergeChunksBodyDto } from './resources.dto';
+import {
+  ResourceInfoBodyDto,
+  ResourcesBodyDto,
+  CreateUploadTaskBodyDto,
+  MergeChunksBodyDto,
+  CreateFolderBodyDto,
+  GetFoldersQueryDto,
+} from './resources.dto';
 import { FastifyRequest } from 'fastify';
-import { pipeline } from 'node:stream/promises';
-import { createWriteStream, writeFileSync } from 'node:fs';
 import { BusinessStatus, HttpResponse } from '@app/common';
 import { MultipartValue } from '@fastify/multipart';
 
@@ -14,6 +19,26 @@ export class ResourcesController {
     private readonly service: ResourcesService,
     private readonly jwtService: JwtService,
   ) {}
+
+  @Get('folders')
+  async getFolders(@Headers('Authorization') token: string, @Query() query: GetFoldersQueryDto) {
+    const { uid } = this.jwtService.decode(token);
+    return this.service.getFolders({
+      ownerId: uid,
+      folderId: query.folderId && Number(query.folderId),
+    });
+  }
+
+  @Post('folder/create')
+  async createFolder(@Headers('Authorization') token: string, @Body() body: CreateFolderBodyDto) {
+    const { uid } = this.jwtService.decode(token);
+    return this.service.createFolder({
+      name: body.name,
+      parentId: body.parentId,
+      ownerId: uid,
+    });
+  }
+
   @Post('info')
   getResource(@Headers('Authorization') token: string, @Body() body: ResourceInfoBodyDto) {
     const { uid } = this.jwtService.decode(token);

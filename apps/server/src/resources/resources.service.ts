@@ -13,6 +13,22 @@ export class ResourcesService {
     private readonly redisService: RedisService,
   ) {}
 
+  async getFolders(params: { folderId?: number; ownerId: string }) {
+    const [result] = await this.mysqlService.client.query(
+      'SELECT * FROM resource_folders WHERE parentId = ? AND ownerId = ?',
+      [params?.folderId || -1, params.ownerId],
+    );
+    return result;
+  }
+
+  async createFolder(params: { parentId?: number; ownerId: string; name: string }) {
+    const [result] = await this.mysqlService.client.query(
+      'INSERT INTO resource_folders(name, parentId, ownerId) VALUES(?, ?, ?)',
+      [params.name, params.parentId || -1, params.ownerId],
+    );
+    return result;
+  }
+
   async mergeChunks(params: { taskId: string; ownerId: string }) {
     const key = `resources/upload/${params.ownerId}/${params.taskId}`;
     const chunkKeys = await this.redisService.client.keys(`${key}/*`);

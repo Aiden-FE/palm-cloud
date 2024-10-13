@@ -19,11 +19,14 @@ const props = withDefaults(
     height?: string;
     closeOnSelected?: boolean;
     zIndex?: number;
+    top?: number | string;
   }>(),
   {
     height: '44px',
     zIndex: 200,
     defaultForm: undefined,
+    closeOnSelected: true,
+    top: 0,
   },
 );
 
@@ -176,9 +179,10 @@ function onChangedPopup({ show }: { show: boolean }) {
 
 <style lang="scss" scoped>
 .drop-down {
-  position: relative;
+  position: sticky;
+  top: v-bind(top);
   display: flex;
-  z-index: 210;
+  z-index: calc(v-bind(zIndex) + 10);
   align-items: center;
   height: v-bind(height);
   background: #ffffff;
@@ -214,7 +218,7 @@ function onChangedPopup({ show }: { show: boolean }) {
     }
   }
   &__popup {
-    margin-top: v-bind(height);
+    margin-top: calc(v-bind(top) + v-bind(height));
     &-list {
       padding: 0 32rpx;
       &-item {

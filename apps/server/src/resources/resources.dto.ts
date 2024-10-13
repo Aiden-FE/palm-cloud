@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsNumberString, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ResourcesBodyDto {
   @IsOptional()
@@ -36,4 +36,20 @@ export class CreateUploadTaskBodyDto {
 export class MergeChunksBodyDto {
   @IsString()
   taskId: string;
+}
+
+export class CreateFolderBodyDto {
+  @IsString()
+  @MaxLength(32)
+  name: string;
+
+  @IsOptional()
+  @IsNumber()
+  parentId?: number;
+}
+
+export class GetFoldersQueryDto {
+  @IsOptional()
+  @IsNumberString()
+  folderId?: number;
 }

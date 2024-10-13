@@ -55,3 +55,19 @@ export function finishUploadResource(data: { taskId: string }): Promise<any> {
     data,
   });
 }
+
+export function createFolder(data: { name: string; parentId?: number }): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/folder/create',
+    data,
+  });
+}
+
+export function getFolders(data?: { folderId?: number }): Promise<any> {
+  return uni.request({
+    method: 'GET',
+    url: '/api/v1/resources/folders',
+    data,
+  });
+}

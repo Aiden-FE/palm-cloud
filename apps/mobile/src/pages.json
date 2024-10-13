@@ -10,12 +10,8 @@
     {
       "path": "pages/resources/resources",
       "style": {
-        "navigationBarTitleText": "文件",
-        "app-plus": {
-          "pullToRefresh": {
-            "support": true
-          }
-        }
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "文件"
       }
     },
     {
