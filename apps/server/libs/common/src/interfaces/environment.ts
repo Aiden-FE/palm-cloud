@@ -31,10 +31,11 @@ export interface EnvironmentVariablesDto {
   REDIS_CONNECTION_URL: string;
 
   EMAIL_HOST: string;
-  EMAIL_PORT: number;
   EMAIL_USER: string;
   EMAIL_PASSWORD: string;
   EMAIL_FROM: string;
+  EMAIL_PORT?: number;
+  EMAIL_SECURE?: boolean;
 
   MINIO_ENDPOINT: string;
   MINIO_ACCESS_KEY: string;

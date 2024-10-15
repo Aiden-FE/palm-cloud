@@ -153,7 +153,8 @@ async function sliceChunk(file: File, chunkSize: number) {
   for (let i = 0; i < total; i += 1) {
     const start = i * chunkSize;
     const end = Math.min(file.size, start + chunkSize);
-    chunks.push(file.slice(start, end));
+    const chunk = file.slice(start, end);
+    chunks.push(chunk);
   }
   return {
     chunks,
@@ -188,18 +189,15 @@ function onClickItem(item: string) {
             if (uploadStatus[index]) {
               return;
             }
-            const formData = new FormData();
-            formData.append('file', chunk);
             taskPromises.push(
               Resources.uploadResourceChunk(
                 {
-                  name: 'file',
-                  file,
+                  name: file.name,
+                  file: chunk,
                 },
                 {
                   taskId,
                   chunkIndex: index,
-                  length: chunk.size,
                 },
               ).then(() => {
                 uploadStatus[index] = 1;

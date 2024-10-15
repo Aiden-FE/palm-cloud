@@ -2,7 +2,7 @@ import { generateMD5 } from '@app/common';
 import { MinioService } from '@app/minio';
 import { MysqlService } from '@app/mysql';
 import { RedisService } from '@app/redis';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { writeFileSync } from 'node:fs';
 
 @Injectable()
@@ -29,10 +29,38 @@ export class ResourcesService {
     return result;
   }
 
+  // async mergeChunks(params: { taskId: string; ownerId: string }) {
+  //   const key = `resources/upload/${params.ownerId}/${params.taskId}`;
+  //   const chunkKeys = await this.redisService.client.keys(`${key}/*`);
+  //   const chunks = [] as any[];
+  //   const taskPromises = [] as Promise<any>[];
+  //   chunkKeys
+  //     .sort((a, b) => {
+  //       const indexA = parseInt(a.split('/').pop() as string, 10);
+  //       const indexB = parseInt(b.split('/').pop() as string, 10);
+  //       return indexA - indexB;
+  //     })
+  //     .forEach((key) => {
+  //       taskPromises.push(this.redisService.client.get(key).then((chunk) => chunks.push(Buffer.from(chunk!, 'hex'))));
+  //     });
+  //   await Promise.all(taskPromises);
+  //   const mergedBuffer = Buffer.concat(chunks);
+  //   const taskInfo = JSON.parse((await this.redisService.client.get(key)) || '');
+  //   writeFileSync(`./tmp/${taskInfo.filename}`, mergedBuffer);
+  //   await this.redisService.client.del(chunkKeys.concat(key));
+  //   return {
+  //     ...taskInfo,
+  //     bufferLen: mergedBuffer.length,
+  //   };
+  // }
+
   async mergeChunks(params: { taskId: string; ownerId: string }) {
     const key = `resources/upload/${params.ownerId}/${params.taskId}`;
     const chunkKeys = await this.redisService.client.keys(`${key}/*`);
-    const chunks = [] as any[];
+    const chunks = [] as any[]; // 分片列表
+    const taskInfo = JSON.parse((await this.redisService.client.get(key)) || ''); // 任务信息
+    // const bucketName = 'palm-cloud';
+    // const bucketFilePath = `resources/upload/${params.ownerId}/${generateMD5(JSON.stringify({ taskId: params.taskId, ownerId: params.ownerId }))}-${taskInfo.filename}`;
     const taskPromises = [] as Promise<any>[];
     chunkKeys
       .sort((a, b) => {
@@ -41,11 +69,10 @@ export class ResourcesService {
         return indexA - indexB;
       })
       .forEach((key) => {
-        taskPromises.push(this.redisService.client.get(key).then((chunk) => chunks.push(Buffer.from(chunk!))));
+        taskPromises.push(this.redisService.client.get(key).then((chunk) => chunks.push(Buffer.from(chunk!, 'hex'))));
       });
     await Promise.all(taskPromises);
     const mergedBuffer = Buffer.concat(chunks);
-    const taskInfo = JSON.parse((await this.redisService.client.get(key)) || '');
     writeFileSync(`./tmp/${taskInfo.filename}`, mergedBuffer);
     await this.redisService.client.del(chunkKeys.concat(key));
     return {
@@ -57,7 +84,7 @@ export class ResourcesService {
   /** 临时保存分片 */
   async saveChunk(params: { taskId: string; chunkIndex: number; buffer: Buffer; ownerId: string }) {
     const key = `resources/upload/${params.ownerId}/${params.taskId}/${params.chunkIndex}`;
-    await this.redisService.client.set(key, params.buffer.toString(), { PX: 1000 * 60 * 60 });
+    await this.redisService.client.set(key, params.buffer.toString('hex'), { PX: 1000 * 60 * 60 });
     return true;
   }
 

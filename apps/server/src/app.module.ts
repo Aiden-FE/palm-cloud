@@ -27,6 +27,7 @@ import { ResourcesModule } from './resources/resources.module';
     EmailModule.forRoot({
       host: getEnvConfig('EMAIL_HOST'),
       port: getEnvConfig('EMAIL_PORT'),
+      secure: getEnvConfig('EMAIL_SECURE'),
       auth: {
         user: getEnvConfig('EMAIL_USER'),
         pass: getEnvConfig('EMAIL_PASSWORD'),

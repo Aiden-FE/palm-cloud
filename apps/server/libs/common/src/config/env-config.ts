@@ -37,10 +37,11 @@ const schema = {
     MYSQL_DATABASE: { type: 'string' },
     REDIS_CONNECTION_URL: { type: 'string' },
     EMAIL_HOST: { type: 'string' },
-    EMAIL_PORT: { type: 'number' },
     EMAIL_USER: { type: 'string' },
     EMAIL_PASSWORD: { type: 'string' },
     EMAIL_FROM: { type: 'string' },
+    EMAIL_PORT: { type: 'number', nullable: true },
+    EMAIL_SECURE: { type: 'boolean', nullable: true, default: true },
     APP_JWT_EXPIRES: {
       type: 'string',
       default: '14d',

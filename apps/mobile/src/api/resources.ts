@@ -33,17 +33,17 @@ export function createUploadTask(data: {
 }
 
 export function uploadResourceChunk(
-  file: { name?: string; filePath?: string; file: File },
+  file: { name?: string; filePath?: string; file: any },
   formData?: any,
 ): Promise<any> {
   const { apiHost, headers } = getRequestConfig();
+  const fileUrl = URL.createObjectURL(file.file);
   return uni.uploadFile({
     method: 'POST',
     url: `${apiHost}/api/v1/resources/upload/chunk`,
     header: headers,
     name: file.name,
-    filePath: file.filePath,
-    file: file.file,
+    filePath: fileUrl,
     formData,
   });
 }
