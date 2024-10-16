@@ -137,16 +137,6 @@ function openCreatePanel() {
   popupRef.value.open();
 }
 
-const blobToArrayBuffer = (blob: any) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      resolve(reader.result);
-    };
-    reader.readAsArrayBuffer(blob);
-  });
-
 async function sliceChunk(file: File, chunkSize: number) {
   const chunks = [];
   const total = Math.ceil(file.size / chunkSize);
@@ -173,44 +163,84 @@ function onClickItem(item: string) {
         sizeType: 'original',
         count: 1,
         success: async ({ tempFiles }) => {
-          const file = (tempFiles as File[])[0];
-          const { total, chunks } = await sliceChunk(file, 1024 * 1024); // 1MB
-          const { taskId, chunkStatus } = await Resources.createUploadTask({
-            filename: file.name,
-            filesize: file.size,
-            filetype: file.type,
-            chunkStatus: Array(total).fill(0),
-            folderId: 1,
+          uni.showLoading({
+            title: '上传中',
           });
-          const taskPromises = [] as Promise<unknown>[];
-          const uploadStatus = [...chunkStatus];
-          chunks.forEach((chunk, index) => {
-            // 已上传的分片则跳过
-            if (uploadStatus[index]) {
-              return;
-            }
-            taskPromises.push(
-              Resources.uploadResourceChunk(
-                {
-                  name: file.name,
-                  file: chunk,
-                },
-                {
-                  taskId,
-                  chunkIndex: index,
-                },
-              ).then(() => {
-                uploadStatus[index] = 1;
-              }),
-            );
-          });
-          await Promise.all(taskPromises).then(async () => {
-            await Resources.finishUploadResource({ taskId });
-          });
+          try {
+            const file = (tempFiles as File[])[0];
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+          // const { total, chunks } = await sliceChunk(file, 1024 * 1024); // 1MB
+          // const { taskId, chunkStatus } = await Resources.createUploadTask({
+          //   filename: file.name,
+          //   filesize: file.size,
+          //   filetype: file.type,
+          //   chunkStatus: Array(total).fill(0),
+          //   folderId: 1,
+          // });
+          // const taskPromises = [] as Promise<unknown>[];
+          // const uploadStatus = [...chunkStatus];
+          // chunks.forEach((chunk, index) => {
+          //   // 已上传的分片则跳过
+          //   if (uploadStatus[index]) {
+          //     return;
+          //   }
+          //   taskPromises.push(
+          //     Resources.uploadResourceChunk(
+          //       {
+          //         name: file.name,
+          //         file: chunk,
+          //       },
+          //       {
+          //         taskId,
+          //         chunkIndex: index,
+          //       },
+          //     ).then(() => {
+          //       uploadStatus[index] = 1;
+          //     }),
+          //   );
+          // });
+          // await Promise.all(taskPromises).then(async () => {
+          //   await Resources.finishUploadResource({ taskId });
+          // });
         },
       });
       break;
     case 'uploadVideo':
+      uni.chooseVideo({
+        compressed: false,
+        success: async ({ tempFile }) => {
+          uni.showLoading({
+            title: '上传中',
+          });
+          try {
+            const file = tempFile;
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+        },
+      });
       break;
     default:
       break;
@@ -222,10 +252,13 @@ function onClickData(item: any) {
     return;
   }
   if (item.fileType?.startsWith('image')) {
+    const startIndex = imageUrlList.value.indexOf(item.url);
+    let endIndex = startIndex + 12;
+    endIndex = endIndex > imageUrlList.value.length ? imageUrlList.value.length : endIndex;
+    const previewUrls = imageUrlList.value.slice(startIndex, endIndex);
     uni.previewImage({
       current: item.url,
-      urls: [item.url],
-      // urls: imageUrlList.value,
+      urls: previewUrls,
     });
   } else if (item.fileType?.startsWith('video')) {
     videoInfo.value.url = item.url;

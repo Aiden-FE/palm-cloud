@@ -8,6 +8,8 @@ import {
   MergeChunksBodyDto,
   CreateFolderBodyDto,
   GetFoldersQueryDto,
+  GenerateUploadUrlBodyDto,
+  FinishUploadBodyDto,
 } from './resources.dto';
 import { FastifyRequest } from 'fastify';
 import { BusinessStatus, HttpResponse } from '@app/common';
@@ -19,6 +21,40 @@ export class ResourcesController {
     private readonly service: ResourcesService,
     private readonly jwtService: JwtService,
   ) {}
+
+  @Post('upload/finish')
+  async finishUploadResource(@Headers('Authorization') token: string, @Body() body: FinishUploadBodyDto) {
+    const { uid } = this.jwtService.decode(token);
+    return this.service.finishUploadResource({
+      filepath: body.filepath,
+      filename: body.filename,
+      folderId: body.folderId,
+      ownerId: uid,
+    });
+  }
+
+  @Post('upload')
+  async getUploadUrl(@Headers('Authorization') token: string, @Body() body: GenerateUploadUrlBodyDto) {
+    const { uid } = this.jwtService.decode(token);
+    // 不允许覆盖同文件夹下的文件
+    if (
+      await this.service.isResourceExistsInFolder({
+        filename: body.filename || (body.filepath.split('/').pop() as string),
+        folderId: body.folderId,
+        ownerId: uid,
+      })
+    ) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.ER_DUP_ENTRY,
+        message: '资源已存在于文件夹中',
+      });
+    }
+
+    return this.service.generateUploadUrl({
+      filepath: body.filepath,
+      ownerId: uid,
+    });
+  }
 
   @Get('folders')
   async getFolders(@Headers('Authorization') token: string, @Query() query: GetFoldersQueryDto) {

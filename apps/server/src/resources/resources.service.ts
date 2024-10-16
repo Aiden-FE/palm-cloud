@@ -13,6 +13,32 @@ export class ResourcesService {
     private readonly redisService: RedisService,
   ) {}
 
+  async finishUploadResource(params: { filepath: string; ownerId: string; filename?: string; folderId?: number }) {
+    const filePath = `resources/upload/${params.ownerId}/${params.filepath}`;
+    const filename = params.filename || filePath.split('/').pop();
+    const url = await this.minioService.client.presignedGetObject('palm-cloud', filePath, 60 * 60 * 1);
+    const result = await this.minioService.client.statObject('palm-cloud', filePath);
+    await this.mysqlService.client.query(
+      'INSERT INTO resources (name, bucketName, filePath, fileType, fileSize, ownerId, folderId) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        filename,
+        'palm-cloud',
+        filePath,
+        result.metaData['content-type'],
+        result.size,
+        params.ownerId,
+        params.folderId || -1,
+      ],
+    );
+    return { ...result, url };
+  }
+
+  async generateUploadUrl(params: { filepath: string; ownerId: string }) {
+    const filePath = `resources/upload/${params.ownerId}/${params.filepath}`;
+    // 1 小时内有效
+    return this.minioService.client.presignedPutObject('palm-cloud', filePath, 60 * 60 * 1);
+  }
+
   async getFolders(params: { folderId?: number; ownerId: string }) {
     const [result] = await this.mysqlService.client.query(
       'SELECT * FROM resource_folders WHERE parentId = ? AND ownerId = ?',
@@ -28,31 +54,6 @@ export class ResourcesService {
     );
     return result;
   }
-
-  // async mergeChunks(params: { taskId: string; ownerId: string }) {
-  //   const key = `resources/upload/${params.ownerId}/${params.taskId}`;
-  //   const chunkKeys = await this.redisService.client.keys(`${key}/*`);
-  //   const chunks = [] as any[];
-  //   const taskPromises = [] as Promise<any>[];
-  //   chunkKeys
-  //     .sort((a, b) => {
-  //       const indexA = parseInt(a.split('/').pop() as string, 10);
-  //       const indexB = parseInt(b.split('/').pop() as string, 10);
-  //       return indexA - indexB;
-  //     })
-  //     .forEach((key) => {
-  //       taskPromises.push(this.redisService.client.get(key).then((chunk) => chunks.push(Buffer.from(chunk!, 'hex'))));
-  //     });
-  //   await Promise.all(taskPromises);
-  //   const mergedBuffer = Buffer.concat(chunks);
-  //   const taskInfo = JSON.parse((await this.redisService.client.get(key)) || '');
-  //   writeFileSync(`./tmp/${taskInfo.filename}`, mergedBuffer);
-  //   await this.redisService.client.del(chunkKeys.concat(key));
-  //   return {
-  //     ...taskInfo,
-  //     bufferLen: mergedBuffer.length,
-  //   };
-  // }
 
   async mergeChunks(params: { taskId: string; ownerId: string }) {
     const key = `resources/upload/${params.ownerId}/${params.taskId}`;

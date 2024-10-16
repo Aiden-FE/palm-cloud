@@ -71,3 +71,26 @@ export function getFolders(data?: { folderId?: number }): Promise<any> {
     data,
   });
 }
+
+export function generateUploadUrl(data: { filepath: string; folderId?: number; filename?: string }): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/upload',
+    data,
+  });
+}
+
+export function uploadToMinio(data: { uploadUrl: string; file: any }): Promise<any> {
+  return fetch(data.uploadUrl, {
+    method: 'PUT',
+    body: data.file,
+  });
+}
+
+export function finishUpload(data: { filepath: string; filename: string }): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/upload/finish',
+    data,
+  });
+}

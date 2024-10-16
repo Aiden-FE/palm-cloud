@@ -53,3 +53,18 @@ export class GetFoldersQueryDto {
   @IsNumberString()
   folderId?: number;
 }
+
+export class GenerateUploadUrlBodyDto {
+  @IsString()
+  filepath: string;
+
+  @IsOptional()
+  @IsString()
+  filename?: string;
+
+  @IsOptional()
+  @IsNumber()
+  folderId?: number;
+}
+
+export class FinishUploadBodyDto extends GenerateUploadUrlBodyDto {}

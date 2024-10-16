@@ -36,6 +36,8 @@ export function addResponseInterceptor() {
       respPromise.then((resp) => {
         if (resp.statusCode >= 200 && resp.statusCode < 300) {
           const result = resp.data as any;
+          // 非标准响应不处理
+          if (!result || !result.statusCode) return resp;
           if (result.statusCode === 100200) {
             return result.data;
           }
