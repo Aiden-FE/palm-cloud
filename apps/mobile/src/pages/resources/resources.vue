@@ -71,12 +71,14 @@ const dropItems = ref([
 const itemOptions = [
   {
     text: '下载',
+    key: 'download',
     style: {
       backgroundColor: '#3c9cff',
     },
   },
   {
     text: '删除',
+    key: 'delete',
     style: {
       backgroundColor: '#f56c6c',
     },
@@ -86,12 +88,14 @@ const itemOptions = [
 const folderOptions = [
   {
     text: '编辑',
+    key: 'edit',
     style: {
       backgroundColor: '#3c9cff',
     },
   },
   {
     text: '删除',
+    key: 'delete',
     style: {
       backgroundColor: '#f56c6c',
     },
@@ -242,6 +246,31 @@ function onClickItem(item: string) {
         },
       });
       break;
+    case 'uploadFile':
+      uni.chooseFile({
+        count: 1,
+        success: async ({ tempFiles }) => {
+          uni.showLoading({
+            title: '上传中',
+          });
+          try {
+            const file = (tempFiles as File[])[0];
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+        },
+      });
+      break;
     default:
       break;
   }
@@ -300,7 +329,7 @@ async function submitCreateFolder() {
     });
     return;
   }
-  await Resources.createFolder({ name: folderName.value });
+  await Resources.createFolder({ name: folderName.value, parentId: currentFolder.value.id });
   uni.showToast({
     title: '创建成功',
     icon: 'none',
@@ -348,6 +377,66 @@ watch(
   },
 );
 
+function onClickSwipeAction(data: {
+  eventData: {
+    index: number;
+    name: number;
+  };
+  item: any;
+  options: { text: string; key: string }[];
+}) {
+  const selectedIndex = data.eventData.index;
+  const selectedOption = data.options[selectedIndex];
+  switch (selectedOption.key) {
+    case 'download':
+      uni.showLoading({
+        title: '下载中...',
+      });
+      uni.downloadFile({
+        url: data.item.url,
+        success: ({ tempFilePath }) => {
+          const a = document.createElement('a');
+          a.href = tempFilePath;
+          a.download = data.item.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        },
+        complete() {
+          uni.hideLoading();
+        },
+      });
+      break;
+    case 'delete':
+      if (data.item.type === 'folder') {
+        Resources.deleteFolders({ ids: [data.item.id] }).then(() => {
+          getList();
+          getFolders();
+          uni.showToast({
+            title: '删除成功',
+            icon: 'none',
+          });
+        });
+      } else {
+        Resources.deleteResources({ ids: [data.item.id] }).then(() => {
+          getList();
+          getFolders();
+          uni.showToast({
+            title: '删除成功',
+            icon: 'none',
+          });
+        });
+      }
+      break;
+    default:
+      uni.showToast({
+        title: '暂不支持该操作',
+        icon: 'none',
+      });
+      break;
+  }
+}
+
 onShow(() => {
   getList();
   getFolders();
@@ -389,6 +478,14 @@ onShow(() => {
             :key="item.id"
             :name="item.id"
             :options="item.type === 'folder' ? folderOptions : itemOptions"
+            @click="
+              (ev: any) =>
+                onClickSwipeAction({
+                  eventData: ev,
+                  item,
+                  options: item.type === 'folder' ? folderOptions : itemOptions,
+                })
+            "
           >
             <div class="resources__item" @click="onClickData(item)">
               <div class="resources__item-prefix">
@@ -451,6 +548,10 @@ onShow(() => {
           <uv-grid-item name="uploadVideo">
             <uv-icon name="camera" :size="36"></uv-icon>
             <text>上传视频</text>
+          </uv-grid-item>
+          <uv-grid-item name="uploadFile">
+            <uv-icon name="file-text" :size="36"></uv-icon>
+            <text>上传文件</text>
           </uv-grid-item>
         </uv-grid>
       </div>

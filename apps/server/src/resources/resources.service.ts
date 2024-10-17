@@ -1,4 +1,4 @@
-import { generateMD5 } from '@app/common';
+import { BusinessStatus, generateMD5, HttpResponse } from '@app/common';
 import { MinioService } from '@app/minio';
 import { MysqlService } from '@app/mysql';
 import { RedisService } from '@app/redis';
@@ -12,6 +12,40 @@ export class ResourcesService {
     private readonly minioService: MinioService,
     private readonly redisService: RedisService,
   ) {}
+
+  async deleteFolders(params: { ids: number[]; ownerId: string }) {
+    const result = await this.mysqlService.client.query('SELECT * FROM resource_folders WHERE parentId IN (?)', [
+      params.ids,
+    ]);
+    if ((result[0] as any[])?.length) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '存在子文件夹，无法删除',
+      });
+    }
+    const result2 = await this.mysqlService.client.query('SELECT * FROM resources WHERE folderId IN (?)', [params.ids]);
+    if ((result2[0] as any[])?.length) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.BAD_REQUEST,
+        message: '存在资源，无法删除',
+      });
+    }
+    await this.mysqlService.client.query('DELETE FROM resource_folders WHERE id IN (?)', [params.ids]);
+    return true;
+  }
+
+  async deleteResources(params: { ids: number[]; ownerId: string }) {
+    return this.mysqlService.transaction(async (connection) => {
+      const result = await connection.query('SELECT * FROM resources WHERE id IN (?)', [params.ids]);
+      await Promise.all(
+        (result[0] as any[]).map(async (resource) => {
+          await this.minioService.client.removeObject(resource.bucketName, resource.filePath);
+        }),
+      );
+      await connection.query('DELETE FROM resources WHERE id IN (?)', [params.ids]);
+      return true;
+    });
+  }
 
   async finishUploadResource(params: { filepath: string; ownerId: string; filename?: string; folderId?: number }) {
     const filePath = `resources/upload/${params.ownerId}/${params.filepath}`;

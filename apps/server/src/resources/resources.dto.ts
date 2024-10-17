@@ -68,3 +68,10 @@ export class GenerateUploadUrlBodyDto {
 }
 
 export class FinishUploadBodyDto extends GenerateUploadUrlBodyDto {}
+
+export class DeleteResourcesBodyDto {
+  @IsArray()
+  ids: number[];
+}
+
+export class DeleteFoldersBodyDto extends DeleteResourcesBodyDto {}

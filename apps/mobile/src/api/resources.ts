@@ -94,3 +94,19 @@ export function finishUpload(data: { filepath: string; filename: string }): Prom
     data,
   });
 }
+
+export function deleteResources(data: { ids: number[] }) {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/delete',
+    data,
+  });
+}
+
+export function deleteFolders(data: { ids: number[] }) {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/folders/delete',
+    data,
+  });
+}
