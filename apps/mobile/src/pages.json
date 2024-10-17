@@ -34,22 +34,30 @@
     }
   ],
   "tabBar": {
-    "color": "#333333",
-    "selectedColor": "#00c0c9",
-    "backgroundColor": "#F8F8F8",
+    "color": "#374151",
+    "selectedColor": "#0791F8",
+    "backgroundColor": "#FFF",
     "borderStyle": "white",
+    "spacing": "5px",
+    "iconWidth": "20px",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "static/images/home.png",
+        "selectedIconPath": "static/images/home_selected.png"
       },
       {
         "pagePath": "pages/resources/resources",
-        "text": "文件"
+        "text": "文件",
+        "iconPath": "static/images/folder.png",
+        "selectedIconPath": "static/images/folder_selected.png"
       },
       {
         "pagePath": "pages/my/my",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/images/profile.png",
+        "selectedIconPath": "static/images/profile_selected.png"
       }
     ]
   },

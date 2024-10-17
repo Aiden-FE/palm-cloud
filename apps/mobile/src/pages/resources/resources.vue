@@ -11,7 +11,6 @@ const list = ref([] as any[]);
 const folders = ref([] as any[]);
 const imageUrlList = ref<string[]>([]);
 const keyword = ref('');
-const popupRef = ref();
 const createFolderPopupRef = ref();
 const videoInfo = ref({
   visible: false,
@@ -121,6 +120,34 @@ const actionList = ref([
 ]);
 const actionSheet = ref();
 
+const addActionSheetRef = ref();
+const addActions = [
+  {
+    name: '创建文件夹',
+    key: 'createFolder',
+    color: '#000000',
+    fontSize: '28rpx',
+  },
+  {
+    name: '上传图片',
+    key: 'uploadImage',
+    color: '#000000',
+    fontSize: '28rpx',
+  },
+  {
+    name: '上传视频',
+    key: 'uploadVideo',
+    color: '#000000',
+    fontSize: '28rpx',
+  },
+  {
+    name: '上传文件',
+    key: 'uploadFile',
+    color: '#000000',
+    fontSize: '28rpx',
+  },
+];
+
 const currentFolder = computed(() => folderStacks.value[folderStacks.value.length - 1]);
 
 function getList() {
@@ -137,10 +164,6 @@ function getList() {
     .finally(() => uni.stopPullDownRefresh());
 }
 
-function openCreatePanel() {
-  popupRef.value.open();
-}
-
 async function sliceChunk(file: File, chunkSize: number) {
   const chunks = [];
   const total = Math.ceil(file.size / chunkSize);
@@ -154,126 +177,6 @@ async function sliceChunk(file: File, chunkSize: number) {
     chunks,
     total,
   };
-}
-
-function onClickItem(item: string) {
-  switch (item) {
-    case 'folder':
-      popupRef.value.close();
-      createFolderPopupRef.value.open();
-      break;
-    case 'uploadImage':
-      uni.chooseImage({
-        sizeType: 'original',
-        count: 1,
-        success: async ({ tempFiles }) => {
-          uni.showLoading({
-            title: '上传中',
-          });
-          try {
-            const file = (tempFiles as File[])[0];
-            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
-            const params = {
-              filepath,
-              filename: file.name,
-              folderId: currentFolder.value.id,
-            };
-            const uploadUrl = await Resources.generateUploadUrl(params);
-            await Resources.uploadToMinio({ uploadUrl, file });
-            await Resources.finishUpload(params);
-            getList();
-          } finally {
-            uni.hideLoading();
-          }
-          // const { total, chunks } = await sliceChunk(file, 1024 * 1024); // 1MB
-          // const { taskId, chunkStatus } = await Resources.createUploadTask({
-          //   filename: file.name,
-          //   filesize: file.size,
-          //   filetype: file.type,
-          //   chunkStatus: Array(total).fill(0),
-          //   folderId: 1,
-          // });
-          // const taskPromises = [] as Promise<unknown>[];
-          // const uploadStatus = [...chunkStatus];
-          // chunks.forEach((chunk, index) => {
-          //   // 已上传的分片则跳过
-          //   if (uploadStatus[index]) {
-          //     return;
-          //   }
-          //   taskPromises.push(
-          //     Resources.uploadResourceChunk(
-          //       {
-          //         name: file.name,
-          //         file: chunk,
-          //       },
-          //       {
-          //         taskId,
-          //         chunkIndex: index,
-          //       },
-          //     ).then(() => {
-          //       uploadStatus[index] = 1;
-          //     }),
-          //   );
-          // });
-          // await Promise.all(taskPromises).then(async () => {
-          //   await Resources.finishUploadResource({ taskId });
-          // });
-        },
-      });
-      break;
-    case 'uploadVideo':
-      uni.chooseVideo({
-        compressed: false,
-        success: async ({ tempFile }) => {
-          uni.showLoading({
-            title: '上传中',
-          });
-          try {
-            const file = tempFile;
-            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
-            const params = {
-              filepath,
-              filename: file.name,
-              folderId: currentFolder.value.id,
-            };
-            const uploadUrl = await Resources.generateUploadUrl(params);
-            await Resources.uploadToMinio({ uploadUrl, file });
-            await Resources.finishUpload(params);
-            getList();
-          } finally {
-            uni.hideLoading();
-          }
-        },
-      });
-      break;
-    case 'uploadFile':
-      uni.chooseFile({
-        count: 1,
-        success: async ({ tempFiles }) => {
-          uni.showLoading({
-            title: '上传中',
-          });
-          try {
-            const file = (tempFiles as File[])[0];
-            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
-            const params = {
-              filepath,
-              filename: file.name,
-              folderId: currentFolder.value.id,
-            };
-            const uploadUrl = await Resources.generateUploadUrl(params);
-            await Resources.uploadToMinio({ uploadUrl, file });
-            await Resources.finishUpload(params);
-            getList();
-          } finally {
-            uni.hideLoading();
-          }
-        },
-      });
-      break;
-    default:
-      break;
-  }
 }
 
 function onClickData(item: any) {
@@ -437,6 +340,129 @@ function onClickSwipeAction(data: {
   }
 }
 
+function openAddActions() {
+  addActionSheetRef.value.open();
+}
+
+function onSelectedAddAction(data: any) {
+  switch (data.key) {
+    case 'createFolder':
+      createFolderPopupRef.value.open();
+      break;
+    case 'uploadImage':
+      uni.chooseImage({
+        sizeType: 'original',
+        count: 1,
+        success: async ({ tempFiles }) => {
+          uni.showLoading({
+            title: '上传中',
+          });
+          try {
+            const file = (tempFiles as File[])[0];
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+          // const { total, chunks } = await sliceChunk(file, 1024 * 1024); // 1MB
+          // const { taskId, chunkStatus } = await Resources.createUploadTask({
+          //   filename: file.name,
+          //   filesize: file.size,
+          //   filetype: file.type,
+          //   chunkStatus: Array(total).fill(0),
+          //   folderId: 1,
+          // });
+          // const taskPromises = [] as Promise<unknown>[];
+          // const uploadStatus = [...chunkStatus];
+          // chunks.forEach((chunk, index) => {
+          //   // 已上传的分片则跳过
+          //   if (uploadStatus[index]) {
+          //     return;
+          //   }
+          //   taskPromises.push(
+          //     Resources.uploadResourceChunk(
+          //       {
+          //         name: file.name,
+          //         file: chunk,
+          //       },
+          //       {
+          //         taskId,
+          //         chunkIndex: index,
+          //       },
+          //     ).then(() => {
+          //       uploadStatus[index] = 1;
+          //     }),
+          //   );
+          // });
+          // await Promise.all(taskPromises).then(async () => {
+          //   await Resources.finishUploadResource({ taskId });
+          // });
+        },
+      });
+      break;
+    case 'uploadVideo':
+      uni.chooseVideo({
+        compressed: false,
+        success: async ({ tempFile }) => {
+          uni.showLoading({
+            title: '上传中',
+          });
+          try {
+            const file = tempFile;
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+        },
+      });
+      break;
+    case 'uploadFile':
+      uni.chooseFile({
+        count: 1,
+        success: async ({ tempFiles }) => {
+          uni.showLoading({
+            title: '上传中',
+          });
+          try {
+            const file = (tempFiles as File[])[0];
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const params = {
+              filepath,
+              filename: file.name,
+              folderId: currentFolder.value.id,
+            };
+            const uploadUrl = await Resources.generateUploadUrl(params);
+            await Resources.uploadToMinio({ uploadUrl, file });
+            await Resources.finishUpload(params);
+            getList();
+          } finally {
+            uni.hideLoading();
+          }
+        },
+      });
+      break;
+    default:
+      break;
+  }
+}
+
 onShow(() => {
   getList();
   getFolders();
@@ -445,7 +471,7 @@ onShow(() => {
 
 <template>
   <div class="resources">
-    <uv-navbar title="" placeholder style="z-index: 9999">
+    <uv-navbar title="" placeholder style="z-index: 9999" height="64px">
       <template #left>
         <view class="resources__navbar-left">
           <uv-icon
@@ -459,6 +485,7 @@ onShow(() => {
         </view>
       </template>
       <template #right>
+        <uv-icon @click="openAddActions" name="plus" size="20" color="#6B7280" style="margin-right: 36rpx"></uv-icon>
         <uv-icon v-if="isEdit" @click="onClickActions" name="setting" size="20"></uv-icon>
         <span v-else @click="onClickBatchActions">批量操作</span>
       </template>
@@ -521,11 +548,6 @@ onShow(() => {
         </uv-swipe-action>
         <uv-empty v-else mode="list" style="margin-top: 32rpx" />
       </div>
-      <div class="resources__add">
-        <uv-button type="primary" shape="circle" @click="openCreatePanel"
-          ><uv-icon name="plus" color="#fff"></uv-icon
-        ></uv-button>
-      </div>
     </template>
     <template v-else>
       <navigator url="/pages/login/login">
@@ -533,29 +555,16 @@ onShow(() => {
       </navigator>
     </template>
 
-    <!-- 添加面板 -->
-    <uv-popup ref="popupRef" mode="bottom">
-      <div class="resources__add-panel">
-        <uv-grid @click="onClickItem" :border="false">
-          <uv-grid-item name="folder">
-            <uv-icon name="folder" :size="36"></uv-icon>
-            <text>创建文件夹</text>
-          </uv-grid-item>
-          <uv-grid-item name="uploadImage">
-            <uv-icon name="photo" :size="36"></uv-icon>
-            <text>上传图片</text>
-          </uv-grid-item>
-          <uv-grid-item name="uploadVideo">
-            <uv-icon name="camera" :size="36"></uv-icon>
-            <text>上传视频</text>
-          </uv-grid-item>
-          <uv-grid-item name="uploadFile">
-            <uv-icon name="file-text" :size="36"></uv-icon>
-            <text>上传文件</text>
-          </uv-grid-item>
-        </uv-grid>
-      </div>
-    </uv-popup>
+    <!-- 新增操作菜单 -->
+    <uv-action-sheet
+      ref="addActionSheetRef"
+      :actions="addActions"
+      :round="20"
+      safe-area-inset-bottom
+      cancel-text="取消"
+      style="z-index: 999"
+      @select="onSelectedAddAction"
+    />
 
     <!-- 创建文件夹弹窗 -->
     <uv-popup ref="createFolderPopupRef" mode="bottom" :close-on-click-overlay="false" closeable>
@@ -599,9 +608,6 @@ onShow(() => {
   :deep(.uv-navbar__content__left) {
     width: 70%;
   }
-  :deep(.uv-action-sheet) {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
-  }
   &__navbar-left {
     display: flex;
     align-items: center;
@@ -611,6 +617,8 @@ onShow(() => {
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+      font-size: 24px;
+      font-weight: 500;
     }
   }
   &__create-folder-panel {
@@ -650,15 +658,6 @@ onShow(() => {
     background-color: #fff;
     video {
       width: 100%;
-    }
-  }
-  &__add {
-    position: fixed;
-    z-index: 100;
-    right: 32rpx;
-    bottom: calc(env(safe-area-inset-bottom) + 128rpx);
-    &-panel {
-      padding: 32rpx 32rpx 128rpx;
     }
   }
 }
