@@ -29,6 +29,7 @@
   "dependencies": {
     "@compass-aiden/helpers": "^0.4.0",
     "@fastify/multipart": "^8.3.0",
+    "@fastify/static": "^7.0.4",
     "@nestjs/common": "^10.4.1",
     "@nestjs/core": "^10.4.1",
     "@nestjs/jwt": "^10.2.0",
@@ -52,7 +53,6 @@
   },
   "devDependencies": {
     "@compass-aiden/eslint-config": "^1.6.3",
-    "@fastify/static": "^7.0.4",
     "@nestjs/cli": "^10.4.4",
     "@nestjs/schematics": "^10.1.4",
     "@nestjs/testing": "^10.4.1",

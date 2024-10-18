@@ -24,3 +24,5 @@ temp
 node_modules
 
 README.md
+
+components.d.ts

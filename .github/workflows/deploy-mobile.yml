@@ -1,0 +1,65 @@
+name: deploy mobile
+
+on:
+  push:
+    tags:
+      - mobile-*
+
+jobs:
+  pipeline:
+    name: deploy mobile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          TAG_NAME="${{ github.ref }}"
+          VERSION=$(echo $TAG_NAME | grep -oP '\b\d+\.\d+\.\d+\b')
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+      - name: Setup git
+        run: |-
+          git config --local user.email github_bot@users.noreply.github.com
+          git config --local user.name GithubBot
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.10.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.12.2
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: pnpm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install deps
+        env:
+          HUSKY: 0
+          SKIP_INSTALL_SIMPLE_GIT_HOOKS: 1
+          SKIP_SIMPLE_GIT_HOOKS: 1
+        run: |-
+          npm pkg delete scripts.prepare
+          pnpm install
+      - name: Run custom commands
+        env:
+          NODE_ENV: production
+        run: npm run build:mobile
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push to docker
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./deploy/base/mobile.Dockerfile
+          push: true
+          tags: |-
+            ${{ vars.DOCKERHUB_IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ vars.DOCKERHUB_IMAGE_NAME }}:latest
+      - name: Deploy to container
+        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-mobile?token=${{ secrets.WEBHOOK_TOKEN }}

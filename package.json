@@ -5,6 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "turbo run build && npm run build:mobile",
+    "build:mobile": "cd apps/mobile && yarn build",
+    "build:server": "cd apps/server && pnpm build",
     "format": "prettier --write apps",
     "prepare": "npx simple-git-hooks",
     "postinstall": "cd apps/mobile && yarn install"
