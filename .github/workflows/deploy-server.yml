@@ -59,7 +59,7 @@ jobs:
           file: ./deploy/base/server.Dockerfile
           push: true
           tags: |-
-            ${{ vars.DOCKERHUB_IMAGE_NAME }}:${{ env.VERSION }}
-            ${{ vars.DOCKERHUB_IMAGE_NAME }}:latest
+            ${{ vars.DOCKERHUB_IMAGE_NAME }}-server:${{ env.VERSION }}
+            ${{ vars.DOCKERHUB_IMAGE_NAME }}-server:latest
       - name: Deploy to container
         run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-server?token=${{ secrets.WEBHOOK_TOKEN }}
