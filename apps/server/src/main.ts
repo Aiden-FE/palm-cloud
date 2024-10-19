@@ -26,7 +26,9 @@ async function bootstrap() {
     new ValidationPipe(VALIDATION_OPTION),
   );
   // cors 保护
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+  });
   // 响应拦截器
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.use(new LoggerMiddleware().use);
