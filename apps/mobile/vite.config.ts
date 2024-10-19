@@ -8,7 +8,7 @@ import autoprefixer from 'autoprefixer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/palm-cloud-mobile/',
+  base: './',
   plugins: [
     uni(),
     Icons({
