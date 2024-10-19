@@ -54,14 +54,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push to docker
         uses: docker/build-push-action@v4
+        env:
+          NODE_ENV: production
+          VITE_API_HOST: ${{ vars.API_HOST }}
         with:
           context: .
           file: ./deploy/base/mobile.Dockerfile
           push: true
-          build-args: |
-            VITE_API_HOST:${{ vars.API_HOST }}
           tags: |-
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:${{ env.VERSION }}
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:latest
       - name: Deploy to container
-        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-mobile?token=${{ secrets.WEBHOOK_TOKEN }}&tag=${{ env.VERSION }}
+        run: curl "${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-mobile?token=${{ secrets.WEBHOOK_TOKEN }}&tag=${{ env.VERSION }}"
