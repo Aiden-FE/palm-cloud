@@ -12,7 +12,7 @@ LABEL Author=Aiden_FE
 ENV NODE_ENV production
 
 # 后端接口地址
-ENV VITE_API_HOST=http://localhost:8080
+ARG VITE_API_HOST=http://localhost:8080
 
 # nginx 配置文件位置
 ARG NGINX_CONF_FILE=deploy/base/nginx.conf

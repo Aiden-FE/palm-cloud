@@ -58,6 +58,8 @@ jobs:
           context: .
           file: ./deploy/base/mobile.Dockerfile
           push: true
+          build-args: |
+            VITE_API_HOST:${{ vars.API_HOST }}
           tags: |-
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:${{ env.VERSION }}
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:latest
