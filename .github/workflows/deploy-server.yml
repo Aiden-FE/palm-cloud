@@ -62,4 +62,4 @@ jobs:
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-server:${{ env.VERSION }}
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-server:latest
       - name: Deploy to container
-        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-server?token=${{ secrets.WEBHOOK_TOKEN }}
+        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-server?token=${{ secrets.WEBHOOK_TOKEN }}&tag=${{ env.VERSION }}

@@ -64,4 +64,4 @@ jobs:
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:${{ env.VERSION }}
             ${{ vars.DOCKERHUB_IMAGE_NAME }}-mobile:latest
       - name: Deploy to container
-        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-mobile?token=${{ secrets.WEBHOOK_TOKEN }}
+        run: curl ${{ vars.WEBHOOK_SERVER_URL }}/hooks/deploy-palm-cloud-mobile?token=${{ secrets.WEBHOOK_TOKEN }}&tag=${{ env.VERSION }}
