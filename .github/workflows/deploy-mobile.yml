@@ -32,8 +32,10 @@ jobs:
       - name: Setup pnpm cache
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: pnpm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          path: |
+            node_modules
+            apps/mobile/node_modules
+          key: pnpm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('**/yarn.lock') }}
       - name: Install deps
         env:
           HUSKY: 0
@@ -45,6 +47,7 @@ jobs:
       - name: Run custom commands
         env:
           NODE_ENV: production
+          VITE_API_HOST: ${{ vars.API_HOST }}
         run: npm run build:mobile
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -54,9 +57,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push to docker
         uses: docker/build-push-action@v4
-        env:
-          NODE_ENV: production
-          VITE_API_HOST: ${{ vars.API_HOST }}
         with:
           context: .
           file: ./deploy/base/mobile.Dockerfile
