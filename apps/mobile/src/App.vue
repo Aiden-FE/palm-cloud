@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app';
-import { storeToRefs } from 'pinia';
 import { useContextStore } from '@/stores';
 
-const { isLogin } = storeToRefs(useContextStore());
-const { updateContext } = useContextStore();
+const { updateContext, getContext } = useContextStore();
 
-if (process.env.NODE_ENV === 'development' && !isLogin.value && import.meta.env.VITE_DEV_TOKEN) {
-  updateContext({
-    token: import.meta.env.VITE_DEV_TOKEN,
-  });
+let token = getContext('token') || localStorage.getItem('token') || '';
+
+if (process.env.NODE_ENV === 'development' && !token && import.meta.env.VITE_DEV_TOKEN) {
+  token = import.meta.env.VITE_DEV_TOKEN;
 }
+
+updateContext({
+  token,
+});
 
 onLaunch(() => {});
 onShow(() => {});

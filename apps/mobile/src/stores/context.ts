@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { toRaw, ref, computed } from 'vue';
+import { toRaw, ref, computed, watch } from 'vue';
 import type { UserInfo } from '@/interfaces';
 
 interface Context {
@@ -14,6 +14,13 @@ const useContextStore = defineStore('context', () => {
   });
 
   const isLogin = computed(() => !!context.value.token);
+
+  watch(
+    () => context.value.token,
+    (token) => {
+      localStorage.setItem('token', token);
+    },
+  );
 
   // 更新用户信息
   function updateContext(info: Context) {
