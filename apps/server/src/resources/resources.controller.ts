@@ -12,6 +12,7 @@ import {
   FinishUploadBodyDto,
   DeleteResourcesBodyDto,
   DeleteFoldersBodyDto,
+  MoveResourcesBodyDto,
 } from './resources.dto';
 import { FastifyRequest } from 'fastify';
 import { BusinessStatus, HttpResponse } from '@app/common';
@@ -23,6 +24,16 @@ export class ResourcesController {
     private readonly service: ResourcesService,
     private readonly jwtService: JwtService,
   ) {}
+
+  @Post('move')
+  async moveResources(@Headers('Authorization') token: string, @Body() body: MoveResourcesBodyDto) {
+    const { uid } = this.jwtService.decode(token);
+    return this.service.moveResources({
+      ids: body.ids,
+      folderId: body.folderId,
+      ownerId: uid,
+    });
+  }
 
   @Post('folders/delete')
   async deleteFolders(@Headers('Authorization') token: string, @Body() body: DeleteFoldersBodyDto) {

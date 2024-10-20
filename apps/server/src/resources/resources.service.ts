@@ -13,6 +13,18 @@ export class ResourcesService {
     private readonly redisService: RedisService,
   ) {}
 
+  async moveResources(params: { ids: number[]; folderId: number; ownerId: string }) {
+    return this.mysqlService.transaction(async (connection) => {
+      const result = await connection.query('SELECT * FROM resources WHERE id IN (?)', [params.ids]);
+      await Promise.all(
+        (result[0] as any[]).map(async (resource) => {
+          await connection.query('UPDATE resources SET folderId = ? WHERE id = ?', [params.folderId, resource.id]);
+        }),
+      );
+      return true;
+    });
+  }
+
   async deleteFolders(params: { ids: number[]; ownerId: string }) {
     const result = await this.mysqlService.client.query('SELECT * FROM resource_folders WHERE parentId IN (?)', [
       params.ids,

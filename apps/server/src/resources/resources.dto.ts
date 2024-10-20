@@ -75,3 +75,11 @@ export class DeleteResourcesBodyDto {
 }
 
 export class DeleteFoldersBodyDto extends DeleteResourcesBodyDto {}
+
+export class MoveResourcesBodyDto {
+  @IsArray()
+  ids: number[];
+
+  @IsNumber()
+  folderId: number;
+}

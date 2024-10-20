@@ -1,16 +1,16 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { onShow } from '@dcloudio/uni-app';
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
 import { useContextStore } from '@/stores';
 import { Resources } from '@/api';
 import DropDown from '@/components/drop-down/drop-down.vue';
+import SelectFolder from '@/components/select-folder/select-folder.vue';
 
 const { isLogin } = storeToRefs(useContextStore());
 const list = ref([] as any[]);
 const folders = ref([] as any[]);
 const imageUrlList = ref<string[]>([]);
-const keyword = ref('');
 const createFolderPopupRef = ref();
 const videoInfo = ref({
   visible: false,
@@ -69,14 +69,14 @@ const dropItems = ref([
 
 const itemOptions = [
   {
-    text: '下载',
+    name: '下载',
     key: 'download',
     style: {
       backgroundColor: '#3c9cff',
     },
   },
   {
-    text: '删除',
+    name: '删除',
     key: 'delete',
     style: {
       backgroundColor: '#f56c6c',
@@ -86,14 +86,14 @@ const itemOptions = [
 
 const folderOptions = [
   {
-    text: '编辑',
+    name: '编辑',
     key: 'edit',
     style: {
       backgroundColor: '#3c9cff',
     },
   },
   {
-    text: '删除',
+    name: '删除',
     key: 'delete',
     style: {
       backgroundColor: '#f56c6c',
@@ -111,9 +111,10 @@ const folderStacks = ref([
 const folderName = ref('');
 
 const isEdit = ref(false);
-const selectedItems = ref<string[]>([]);
+const selectedItems = ref<number[]>([]);
 
 const actionList = ref([
+  { name: '全选', key: 'selectAll' },
   { name: '批量移动', key: 'move' },
   { name: '批量删除', key: 'delete' },
   { name: '取消编辑', key: 'cancel' },
@@ -148,6 +149,14 @@ const addActions = [
   },
 ];
 
+const itemActionsRef = ref();
+const itemActions = reactive({
+  actions: itemOptions,
+  currentItem: null as null | any,
+});
+
+const selectFolderVisible = ref(false);
+
 const currentFolder = computed(() => folderStacks.value[folderStacks.value.length - 1]);
 
 function getList() {
@@ -181,6 +190,8 @@ async function sliceChunk(file: File, chunkSize: number) {
 
 function onClickData(item: any) {
   if (isEdit.value) {
+    // eslint-disable-next-line no-use-before-define
+    onSelecte(item.id);
     return;
   }
   if (item.fileType?.startsWith('image')) {
@@ -242,10 +253,18 @@ async function submitCreateFolder() {
   folderName.value = '';
 }
 
-function onSelecte(id: string) {
+function onSelecte(id: number) {
   selectedItems.value = selectedItems.value.includes(id)
     ? selectedItems.value.filter((item) => item !== id)
     : [...selectedItems.value, id];
+}
+
+function openEdit(item: any) {
+  if (item.type === 'folder') {
+    return;
+  }
+  onSelecte(item.id);
+  isEdit.value = true;
 }
 
 function onClickBack() {
@@ -254,22 +273,67 @@ function onClickBack() {
   }
 }
 
-function onClickActions() {
-  actionSheet.value.open();
+async function onMoveToFolder({ id }: { id: number; item: any }) {
+  if (!selectedItems.value.length) {
+    uni.showToast({
+      title: '请先选择要移动的资源',
+      icon: 'none',
+    });
+    return;
+  }
+  if (id === currentFolder.value.id) {
+    uni.showToast({
+      title: '不能移动到当前文件夹',
+      icon: 'none',
+    });
+    return;
+  }
+  await Resources.moveResources({ ids: selectedItems.value, folderId: id });
+  getList();
+  selectedItems.value = [];
+  isEdit.value = false;
+  uni.showToast({
+    title: '移动成功',
+    icon: 'none',
+  });
 }
 
 function onSelectAction({ key }: { key: string }) {
   switch (key) {
+    case 'selectAll':
+      selectedItems.value = list.value.map((item) => item.id);
+      break;
+    case 'move':
+      selectFolderVisible.value = true;
+      break;
+    case 'delete':
+      Resources.deleteResources({ ids: selectedItems.value }).then(() => {
+        selectedItems.value = [];
+        isEdit.value = false;
+        getList();
+        getFolders();
+        uni.showToast({
+          title: '批量删除成功',
+          icon: 'none',
+        });
+      });
+      break;
+    case 'more':
+      if (!selectedItems.value.length) {
+        uni.showToast({
+          title: '请先选择要操作的资源',
+          icon: 'none',
+        });
+        return;
+      }
+      actionSheet.value.open();
+      break;
     case 'cancel':
     default:
       selectedItems.value = [];
       isEdit.value = false;
       break;
   }
-}
-
-function onClickBatchActions() {
-  isEdit.value = true;
 }
 
 watch(
@@ -279,66 +343,6 @@ watch(
     getFolders();
   },
 );
-
-function onClickSwipeAction(data: {
-  eventData: {
-    index: number;
-    name: number;
-  };
-  item: any;
-  options: { text: string; key: string }[];
-}) {
-  const selectedIndex = data.eventData.index;
-  const selectedOption = data.options[selectedIndex];
-  switch (selectedOption.key) {
-    case 'download':
-      uni.showLoading({
-        title: '下载中...',
-      });
-      uni.downloadFile({
-        url: data.item.url,
-        success: ({ tempFilePath }) => {
-          const a = document.createElement('a');
-          a.href = tempFilePath;
-          a.download = data.item.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        },
-        complete() {
-          uni.hideLoading();
-        },
-      });
-      break;
-    case 'delete':
-      if (data.item.type === 'folder') {
-        Resources.deleteFolders({ ids: [data.item.id] }).then(() => {
-          getList();
-          getFolders();
-          uni.showToast({
-            title: '删除成功',
-            icon: 'none',
-          });
-        });
-      } else {
-        Resources.deleteResources({ ids: [data.item.id] }).then(() => {
-          getList();
-          getFolders();
-          uni.showToast({
-            title: '删除成功',
-            icon: 'none',
-          });
-        });
-      }
-      break;
-    default:
-      uni.showToast({
-        title: '暂不支持该操作',
-        icon: 'none',
-      });
-      break;
-  }
-}
 
 function openAddActions() {
   addActionSheetRef.value.open();
@@ -463,15 +467,80 @@ function onSelectedAddAction(data: any) {
   }
 }
 
-onShow(() => {
+function openItemActionsPanel(data: any) {
+  itemActions.currentItem = data;
+  if (data.type === 'folder') {
+    itemActions.actions = folderOptions;
+  } else {
+    itemActions.actions = itemOptions;
+  }
+  itemActionsRef.value.open();
+}
+
+function onSelectedItemAction(selectedOption: any) {
+  const item = itemActions.currentItem;
+  switch (selectedOption.key) {
+    case 'download':
+      uni.showLoading({
+        title: '下载中...',
+      });
+      uni.downloadFile({
+        url: item.url,
+        success: ({ tempFilePath }) => {
+          const a = document.createElement('a');
+          a.href = tempFilePath;
+          a.download = item.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        },
+        complete() {
+          uni.hideLoading();
+        },
+      });
+      break;
+    case 'delete':
+      if (item.type === 'folder') {
+        Resources.deleteFolders({ ids: [item.id] }).then(() => {
+          getList();
+          getFolders();
+          uni.showToast({
+            title: '删除成功',
+            icon: 'none',
+          });
+        });
+      } else {
+        Resources.deleteResources({ ids: [item.id] }).then(() => {
+          getList();
+          getFolders();
+          uni.showToast({
+            title: '删除成功',
+            icon: 'none',
+          });
+        });
+      }
+      break;
+    default:
+      uni.showToast({
+        title: '暂不支持该操作',
+        icon: 'none',
+      });
+      break;
+  }
+}
+
+onPullDownRefresh(() => {
   getList();
   getFolders();
 });
+
+getList();
+getFolders();
 </script>
 
 <template>
   <div class="resources">
-    <uv-navbar title="" placeholder style="z-index: 9999" height="64px">
+    <uv-navbar placeholder style="z-index: 888" height="64px">
       <template #left>
         <view class="resources__navbar-left">
           <uv-icon
@@ -485,69 +554,71 @@ onShow(() => {
         </view>
       </template>
       <template #right>
-        <uv-icon @click="openAddActions" name="plus" size="20" color="#6B7280" style="margin-right: 36rpx"></uv-icon>
-        <uv-icon v-if="isEdit" @click="onClickActions" name="setting" size="20"></uv-icon>
-        <span v-else @click="onClickBatchActions">批量操作</span>
+        <template v-if="isEdit">
+          <uv-text text="取消" @click="onSelectAction({ key: 'cancel' })" class="!mr-[16rpx]"></uv-text>
+          <uv-text text="操作" @click="onSelectAction({ key: 'more' })"></uv-text>
+        </template>
+        <uv-icon v-else @click="openAddActions" name="plus" size="20" color="#6B7280"></uv-icon>
       </template>
     </uv-navbar>
     <template v-if="isLogin">
-      <div>
-        <DropDown :z-index="2000" :items="dropItems" :default-form="dropForm" top="84rpx" @change="onFilterChange" />
-        <uv-search
-          style="position: sticky; top: 168rpx; z-index: 100"
-          placeholder="可根据关键字筛选"
-          v-model="keyword"
-          :show-action="false"
-        ></uv-search>
-        <uv-swipe-action v-if="folders.concat(list).length">
-          <uv-swipe-action-item
-            v-for="item in folders.concat(list)"
-            :key="item.id"
-            :name="item.id"
-            :options="item.type === 'folder' ? folderOptions : itemOptions"
-            @click="
-              (ev: any) =>
-                onClickSwipeAction({
-                  eventData: ev,
-                  item,
-                  options: item.type === 'folder' ? folderOptions : itemOptions,
-                })
-            "
-          >
-            <div class="resources__item" @click="onClickData(item)">
-              <div class="resources__item-prefix">
+      <DropDown
+        :z-index="210"
+        :items="dropItems"
+        mode="left"
+        :default-form="dropForm"
+        height="40px"
+        top="64px"
+        @change="onFilterChange"
+      >
+      </DropDown>
+      <uv-list @touchmove.stop @touch.stop v-if="folders.concat(list).length">
+        <uv-list-item v-for="item in folders.concat(list)" :key="item.id">
+          <div class="resources__item" @click="onClickData(item)" @longpress="openEdit(item)">
+            <div class="resources__item-prefix">
+              <uv-icon v-if="item.type === 'folder'" name="folder" color="#fad870" size="80rpx"></uv-icon>
+              <uv-icon
+                v-else-if="item.fileType?.startsWith('video')"
+                name="camera"
+                color="#40a9ff"
+                size="80rpx"
+              ></uv-icon>
+              <uv-image
+                v-else-if="item.fileType?.startsWith('image')"
+                :src="item.url"
+                width="80rpx"
+                height="80rpx"
+                observe-lazy-load
+                mode="aspectFill"
+              >
+                <template #loading>
+                  <uv-loading-icon color="red"></uv-loading-icon>
+                </template>
+              </uv-image>
+              <uv-icon v-else name="file-text" size="80rpx"></uv-icon>
+            </div>
+            <div class="resources__item-content">
+              <div class="resources__item-content-main">{{ item.name }}</div>
+              <div class="resources__item-content-sub" @click.stop>
                 <checkbox
                   v-if="isEdit && item.type !== 'folder'"
                   :checked="selectedItems.includes(item.id)"
                   @click="onSelecte(item.id)"
                 ></checkbox>
-                <uv-icon v-if="item.type === 'folder'" name="folder" color="#fad870" size="80rpx"></uv-icon>
                 <uv-icon
-                  v-else-if="item.fileType?.startsWith('video')"
-                  name="camera"
-                  color="#40a9ff"
-                  size="80rpx"
+                  v-else-if="!isEdit"
+                  name="more-dot-fill"
+                  size="48rpx"
+                  color="rgba(107, 114, 128, 1)"
+                  style="transform: rotate(90deg)"
+                  @click="openItemActionsPanel(item)"
                 ></uv-icon>
-                <uv-image
-                  v-else-if="item.fileType?.startsWith('image')"
-                  :src="item.url"
-                  width="80rpx"
-                  height="80rpx"
-                  observe-lazy-load
-                  mode="aspectFill"
-                >
-                  <template #loading>
-                    <uv-loading-icon color="red"></uv-loading-icon>
-                  </template>
-                </uv-image>
-                <uv-icon v-else name="file-text" size="80rpx"></uv-icon>
               </div>
-              <div class="resources__item-content">{{ item.name }}</div>
             </div>
-          </uv-swipe-action-item>
-        </uv-swipe-action>
-        <uv-empty v-else mode="list" style="margin-top: 32rpx" />
-      </div>
+          </div>
+        </uv-list-item>
+      </uv-list>
+      <uv-empty v-else mode="list" style="margin-top: 32rpx" />
     </template>
     <template v-else>
       <navigator url="/pages/login/login">
@@ -562,7 +633,7 @@ onShow(() => {
       :round="20"
       safe-area-inset-bottom
       cancel-text="取消"
-      style="z-index: 999"
+      style="z-index: 1010"
       @select="onSelectedAddAction"
     />
 
@@ -597,6 +668,18 @@ onShow(() => {
     </uv-overlay>
 
     <uv-action-sheet @select="onSelectAction" ref="actionSheet" :actions="actionList" title="操作" />
+    <uv-action-sheet
+      @select="onSelectedItemAction"
+      ref="itemActionsRef"
+      style="z-index: 1010"
+      :actions="itemActions.actions"
+      cancel-text="取消"
+    />
+    <SelectFolder
+      v-model:visible="selectFolderVisible"
+      :disabled-folder-ids="[currentFolder.id]"
+      @select="onMoveToFolder"
+    />
   </div>
 </template>
 
@@ -607,6 +690,9 @@ onShow(() => {
   overflow-x: hidden;
   :deep(.uv-navbar__content__left) {
     width: 70%;
+  }
+  :deep(.drop-down) {
+    box-shadow: none;
   }
   &__navbar-left {
     display: flex;
@@ -633,14 +719,22 @@ onShow(() => {
     display: flex;
     align-items: center;
     padding: 16rpx 32rpx;
-    border-bottom: 2rpx solid #e5e5e5;
+    height: 136rpx;
     &-prefix {
       display: flex;
       align-items: center;
       margin-right: 16rpx;
     }
     &-content {
+      display: flex;
+      align-items: center;
       flex: 1;
+      height: 100%;
+      border-bottom: 2rpx solid #f3f4f6;
+      &-main {
+        word-break: break-all;
+        flex: 1;
+      }
     }
     &-suffix {
       margin-left: 16rpx;

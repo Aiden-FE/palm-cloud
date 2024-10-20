@@ -11,7 +11,9 @@
       "path": "pages/resources/resources",
       "style": {
         "navigationStyle": "custom",
-        "navigationBarTitleText": "文件"
+        "backgroundTextStyle": "light",
+        "navigationBarTitleText": "文件",
+        "enablePullDownRefresh": true
       }
     },
     {

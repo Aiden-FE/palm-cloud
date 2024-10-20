@@ -11,5 +11,6 @@ declare module 'vue' {
     IAntDesignCaretDownOutlined: typeof import('~icons/ant-design/caret-down-outlined')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SelectFolder: typeof import('./components/select-folder/select-folder.vue')['default']
   }
 }

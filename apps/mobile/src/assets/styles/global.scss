@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 page {
   font-family:
     BlinkMacSystemFont,
@@ -28,4 +32,7 @@ page {
 
 .uni-tabbar {
   box-shadow: 0px -1px 0px #f3f4f6;
+}
+.uni-tabbar-bottom {
+  z-index: 200;
 }

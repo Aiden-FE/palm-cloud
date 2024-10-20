@@ -20,6 +20,7 @@ const props = withDefaults(
     closeOnSelected?: boolean;
     zIndex?: number;
     top?: number | string;
+    mode?: 'center' | 'left';
   }>(),
   {
     height: '44px',
@@ -27,6 +28,7 @@ const props = withDefaults(
     defaultForm: undefined,
     closeOnSelected: true,
     top: 0,
+    mode: 'center',
   },
 );
 
@@ -114,18 +116,47 @@ function onChangedPopup({ show }: { show: boolean }) {
 
 <template>
   <view class="drop-down">
-    <view v-for="item in items" :key="item.key" @click="onClickItem(item)" class="drop-down__item">
-      <span class="drop-down__item-title">{{ displayLabels[item.key] || item.label }}</span>
-      <template v-if="!item.disabled">
-        <uv-icon
-          v-if="isVisiblePopup && currentActivedItem === item.key"
-          name="arrow-up-fill"
-          color="#A3A3A3"
-          size="24rpx"
-        ></uv-icon>
-        <uv-icon v-else name="arrow-down-fill" color="#A3A3A3" size="24rpx"></uv-icon>
+    <slot v-bind="{ items, onClickItem, displayLabels, currentActivedItem, isVisiblePopup }">
+      <template v-if="mode === 'center'">
+        <view v-for="item in items" :key="item.key" @click="onClickItem(item)" class="drop-down__item">
+          <span class="drop-down__item-title">{{ displayLabels[item.key] || item.label }}</span>
+          <template v-if="!item.disabled">
+            <uv-icon
+              v-if="isVisiblePopup && currentActivedItem === item.key"
+              name="arrow-up-fill"
+              color="#A3A3A3"
+              size="24rpx"
+            ></uv-icon>
+            <uv-icon v-else name="arrow-down-fill" color="#A3A3A3" size="24rpx"></uv-icon>
+          </template>
+        </view>
       </template>
-    </view>
+      <template v-else>
+        <div class="flex">
+          <!-- 左侧actions -->
+          <div class="flex px-[32rpx]">
+            <div
+              class="text-[#9ca3af] text-[26rpx] flex mr-[32rpx]"
+              v-for="item in items"
+              :key="item.key"
+              @click="onClickItem(item)"
+            >
+              <span>{{ item.label }}</span>
+              <uv-icon
+                v-if="isVisiblePopup && currentActivedItem === item.key"
+                name="arrow-up-fill"
+                color="#A3A3A3"
+                size="24rpx"
+                class="ml-[8rpx]"
+              ></uv-icon>
+              <uv-icon v-else name="arrow-down-fill" color="#A3A3A3" size="24rpx" class="ml-[8rpx]"></uv-icon>
+            </div>
+          </div>
+          <!-- 右侧actions -->
+          <div></div>
+        </div>
+      </template>
+    </slot>
   </view>
   <uv-popup
     @change="onChangedPopup"

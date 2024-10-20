@@ -110,3 +110,11 @@ export function deleteFolders(data: { ids: number[] }) {
     data,
   });
 }
+
+export function moveResources(data: { ids: number[]; folderId: number }) {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/move',
+    data,
+  });
+}
