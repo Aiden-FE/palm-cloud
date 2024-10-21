@@ -65,6 +65,7 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-4020820240925001",
     "@dcloudio/uni-mp-xhs": "3.0.0-4020820240925001",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4020820240925001",
+    "nanoid": "^5.0.7",
     "pinia": "^2.2.2",
     "tailwindcss": "^3.4.14",
     "vue": "^3.5.10",

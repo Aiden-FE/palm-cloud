@@ -77,9 +77,25 @@ export class DeleteResourcesBodyDto {
 export class DeleteFoldersBodyDto extends DeleteResourcesBodyDto {}
 
 export class MoveResourcesBodyDto {
+  @IsOptional()
   @IsArray()
-  ids: number[];
+  ids?: number[];
+
+  @IsOptional()
+  @IsArray()
+  folderIds?: number[];
 
   @IsNumber()
   folderId: number;
+}
+
+export class RenameResourceBodyDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  type: 'folder' | 'file';
 }

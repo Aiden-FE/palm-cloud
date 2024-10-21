@@ -1,9 +1,9 @@
+import { writeFileSync } from 'node:fs';
 import { BusinessStatus, generateMD5, HttpResponse } from '@app/common';
 import { MinioService } from '@app/minio';
 import { MysqlService } from '@app/mysql';
 import { RedisService } from '@app/redis';
 import { Injectable } from '@nestjs/common';
-import { writeFileSync } from 'node:fs';
 
 @Injectable()
 export class ResourcesService {
@@ -13,12 +13,57 @@ export class ResourcesService {
     private readonly redisService: RedisService,
   ) {}
 
+  async renameResourceOrFolder(params: { id: number; type: 'folder' | 'file'; name: string; ownerId: string }) {
+    return this.mysqlService.transaction(async (connection) => {
+      if (params.type === 'folder') {
+        await connection.query('UPDATE resource_folders SET name = ? WHERE id = ? AND ownerId = ?', [
+          params.name,
+          params.id,
+          params.ownerId,
+        ]);
+        return true;
+      }
+      await connection.query('UPDATE resources SET name = ? WHERE id = ? AND ownerId = ?', [
+        params.name,
+        params.id,
+        params.ownerId,
+      ]);
+      return true;
+    });
+  }
+
+  async moveFolders(params: { ids: number[]; folderId: number; ownerId: string }) {
+    return this.mysqlService.transaction(async (connection) => {
+      const result = await connection.query('SELECT * FROM resource_folders WHERE id IN (?) AND ownerId = ?', [
+        params.ids,
+        params.ownerId,
+      ]);
+      await Promise.all(
+        (result[0] as any[]).map(async (folder) => {
+          await connection.query('UPDATE resource_folders SET parentId = ? WHERE id = ? AND ownerId = ?', [
+            params.folderId,
+            folder.id,
+            params.ownerId,
+          ]);
+        }),
+      );
+      return true;
+    });
+  }
+
   async moveResources(params: { ids: number[]; folderId: number; ownerId: string }) {
     return this.mysqlService.transaction(async (connection) => {
-      const result = await connection.query('SELECT * FROM resources WHERE id IN (?)', [params.ids]);
+      const result = await connection.query('SELECT * FROM resources WHERE id IN (?) AND ownerId = ?', [
+        params.ids,
+        params.ownerId,
+      ]);
       await Promise.all(
         (result[0] as any[]).map(async (resource) => {
-          await connection.query('UPDATE resources SET folderId = ? WHERE id = ?', [params.folderId, resource.id]);
+          await connection.query('UPDATE resources SET folderId = ? WHERE id = ? AND ownerId = ?', [
+            params.folderId,
+            resource.id,
+            params.ownerId,
+          ]);
         }),
       );
       return true;
@@ -26,35 +71,45 @@ export class ResourcesService {
   }
 
   async deleteFolders(params: { ids: number[]; ownerId: string }) {
-    const result = await this.mysqlService.client.query('SELECT * FROM resource_folders WHERE parentId IN (?)', [
-      params.ids,
-    ]);
+    const result = await this.mysqlService.client.query(
+      'SELECT * FROM resource_folders WHERE parentId IN (?) AND ownerId = ?',
+      [params.ids, params.ownerId],
+    );
     if ((result[0] as any[])?.length) {
       return new HttpResponse({
         statusCode: BusinessStatus.BAD_REQUEST,
         message: '存在子文件夹，无法删除',
       });
     }
-    const result2 = await this.mysqlService.client.query('SELECT * FROM resources WHERE folderId IN (?)', [params.ids]);
+    const result2 = await this.mysqlService.client.query(
+      'SELECT * FROM resources WHERE folderId IN (?) AND ownerId = ?',
+      [params.ids, params.ownerId],
+    );
     if ((result2[0] as any[])?.length) {
       return new HttpResponse({
         statusCode: BusinessStatus.BAD_REQUEST,
         message: '存在资源，无法删除',
       });
     }
-    await this.mysqlService.client.query('DELETE FROM resource_folders WHERE id IN (?)', [params.ids]);
+    await this.mysqlService.client.query('DELETE FROM resource_folders WHERE id IN (?) AND ownerId = ?', [
+      params.ids,
+      params.ownerId,
+    ]);
     return true;
   }
 
   async deleteResources(params: { ids: number[]; ownerId: string }) {
     return this.mysqlService.transaction(async (connection) => {
-      const result = await connection.query('SELECT * FROM resources WHERE id IN (?)', [params.ids]);
+      const result = await connection.query('SELECT * FROM resources WHERE id IN (?) AND ownerId = ?', [
+        params.ids,
+        params.ownerId,
+      ]);
       await Promise.all(
         (result[0] as any[]).map(async (resource) => {
           await this.minioService.client.removeObject(resource.bucketName, resource.filePath);
         }),
       );
-      await connection.query('DELETE FROM resources WHERE id IN (?)', [params.ids]);
+      await connection.query('DELETE FROM resources WHERE id IN (?) AND ownerId = ?', [params.ids, params.ownerId]);
       return true;
     });
   }

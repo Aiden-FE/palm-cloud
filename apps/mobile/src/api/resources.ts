@@ -95,7 +95,7 @@ export function finishUpload(data: { filepath: string; filename: string }): Prom
   });
 }
 
-export function deleteResources(data: { ids: number[] }) {
+export function deleteResources(data: { ids: number[]; folderIds?: number[] }) {
   return uni.request({
     method: 'POST',
     url: '/api/v1/resources/delete',
@@ -111,10 +111,18 @@ export function deleteFolders(data: { ids: number[] }) {
   });
 }
 
-export function moveResources(data: { ids: number[]; folderId: number }) {
+export function moveResources(data: { ids?: number[]; folderIds?: number[]; folderId: number }) {
   return uni.request({
     method: 'POST',
     url: '/api/v1/resources/move',
+    data,
+  });
+}
+
+export function renameResourceOrFolder(data: { id: number; name: string; type: 'folder' | 'file' }) {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/resources/rename',
     data,
   });
 }

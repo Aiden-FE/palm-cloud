@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
+import { onPullDownRefresh } from '@dcloudio/uni-app';
+import { nanoid } from 'nanoid';
 import { useContextStore } from '@/stores';
 import { Resources } from '@/api';
 import DropDown from '@/components/drop-down/drop-down.vue';
@@ -12,6 +13,20 @@ const list = ref([] as any[]);
 const folders = ref([] as any[]);
 const imageUrlList = ref<string[]>([]);
 const createFolderPopupRef = ref();
+const editInfo = ref({
+  newName: '',
+  item: null as any,
+  rules: {
+    newName: {
+      type: 'string',
+      required: true,
+      message: '请填写名称',
+      trigger: ['blur', 'change'],
+    },
+  },
+});
+const editInfoPopupRef = ref();
+const editInfoFormRef = ref();
 const videoInfo = ref({
   visible: false,
   url: '',
@@ -69,6 +84,13 @@ const dropItems = ref([
 
 const itemOptions = [
   {
+    name: '编辑',
+    key: 'edit',
+    style: {
+      backgroundColor: '#3c9cff',
+    },
+  },
+  {
     name: '下载',
     key: 'download',
     style: {
@@ -111,10 +133,10 @@ const folderStacks = ref([
 const folderName = ref('');
 
 const isEdit = ref(false);
-const selectedItems = ref<number[]>([]);
+const selectedItems = ref<{ id: number; type: 'folder' | 'file' }[]>([]);
 
 const actionList = ref([
-  { name: '全选', key: 'selectAll' },
+  { name: '选择全部', key: 'selectAll' },
   { name: '批量移动', key: 'move' },
   { name: '批量删除', key: 'delete' },
   { name: '取消编辑', key: 'cancel' },
@@ -191,7 +213,10 @@ async function sliceChunk(file: File, chunkSize: number) {
 function onClickData(item: any) {
   if (isEdit.value) {
     // eslint-disable-next-line no-use-before-define
-    onSelecte(item.id);
+    onSelecte({
+      id: item.id,
+      type: item.type === 'folder' ? 'folder' : 'file',
+    });
     return;
   }
   if (item.fileType?.startsWith('image')) {
@@ -202,6 +227,7 @@ function onClickData(item: any) {
     uni.previewImage({
       current: item.url,
       urls: previewUrls,
+      loop: true,
     });
   } else if (item.fileType?.startsWith('video')) {
     videoInfo.value.url = item.url;
@@ -253,17 +279,15 @@ async function submitCreateFolder() {
   folderName.value = '';
 }
 
-function onSelecte(id: number) {
-  selectedItems.value = selectedItems.value.includes(id)
-    ? selectedItems.value.filter((item) => item !== id)
-    : [...selectedItems.value, id];
+function onSelecte(data: { id: number; type: 'folder' | 'file' }) {
+  console.log('Debug: ', data);
+  selectedItems.value = selectedItems.value.some((item) => item.id === data.id)
+    ? selectedItems.value.filter((item) => item.id !== data.id)
+    : [...selectedItems.value, data];
 }
 
 function openEdit(item: any) {
-  if (item.type === 'folder') {
-    return;
-  }
-  onSelecte(item.id);
+  onSelecte({ id: item.id, type: item.type === 'folder' ? 'folder' : 'file' });
   isEdit.value = true;
 }
 
@@ -288,7 +312,11 @@ async function onMoveToFolder({ id }: { id: number; item: any }) {
     });
     return;
   }
-  await Resources.moveResources({ ids: selectedItems.value, folderId: id });
+  await Resources.moveResources({
+    ids: selectedItems.value.filter((item) => item.type !== 'folder').map((item) => item.id),
+    folderIds: selectedItems.value.filter((item) => item.type === 'folder').map((item) => item.id),
+    folderId: id,
+  });
   getList();
   selectedItems.value = [];
   isEdit.value = false;
@@ -301,13 +329,18 @@ async function onMoveToFolder({ id }: { id: number; item: any }) {
 function onSelectAction({ key }: { key: string }) {
   switch (key) {
     case 'selectAll':
-      selectedItems.value = list.value.map((item) => item.id);
+      selectedItems.value = folders.value
+        .map((item) => ({ id: item.id, type: 'folder' as 'folder' | 'file' }))
+        .concat(list.value.map((item) => ({ id: item.id, type: 'file' })));
       break;
     case 'move':
       selectFolderVisible.value = true;
       break;
     case 'delete':
-      Resources.deleteResources({ ids: selectedItems.value }).then(() => {
+      Resources.deleteResources({
+        ids: selectedItems.value.filter((item) => item.type !== 'folder').map((item) => item.id),
+        folderIds: selectedItems.value.filter((item) => item.type === 'folder').map((item) => item.id),
+      }).then(() => {
         selectedItems.value = [];
         isEdit.value = false;
         getList();
@@ -363,7 +396,7 @@ function onSelectedAddAction(data: any) {
           });
           try {
             const file = (tempFiles as File[])[0];
-            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${file.name}`;
+            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${nanoid(32)}-${file.name}`;
             const params = {
               filepath,
               filename: file.name,
@@ -480,6 +513,11 @@ function openItemActionsPanel(data: any) {
 function onSelectedItemAction(selectedOption: any) {
   const item = itemActions.currentItem;
   switch (selectedOption.key) {
+    case 'edit':
+      editInfo.value.item = item;
+      editInfo.value.newName = item.name;
+      editInfoPopupRef.value.open();
+      break;
     case 'download':
       uni.showLoading({
         title: '下载中...',
@@ -527,6 +565,35 @@ function onSelectedItemAction(selectedOption: any) {
       });
       break;
   }
+}
+
+async function onEditConfirm() {
+  await editInfoFormRef.value.validate();
+  if (editInfo.value.newName === editInfo.value.item.name) {
+    uni.showToast({
+      title: '名称未修改',
+      icon: 'none',
+    });
+    return;
+  }
+  await Resources.renameResourceOrFolder({
+    id: editInfo.value.item.id,
+    name: editInfo.value.newName,
+    type: editInfo.value.item.type === 'folder' ? 'folder' : 'file',
+  });
+  uni.showToast({
+    title: '修改成功',
+    icon: 'none',
+  });
+  editInfoPopupRef.value.close();
+  if (editInfo.value.item.type === 'folder') {
+    getFolders();
+  } else {
+    getList();
+  }
+  editInfoPopupRef.value.resetFields();
+  editInfoPopupRef.value.clearValidate();
+  editInfo.value.item = null;
 }
 
 onPullDownRefresh(() => {
@@ -601,9 +668,13 @@ getFolders();
               <div class="resources__item-content-main">{{ item.name }}</div>
               <div class="resources__item-content-sub" @click.stop>
                 <checkbox
-                  v-if="isEdit && item.type !== 'folder'"
-                  :checked="selectedItems.includes(item.id)"
-                  @click="onSelecte(item.id)"
+                  v-if="isEdit"
+                  :checked="
+                    selectedItems.some(
+                      (data) => data.id === item.id && data.type === (item.type === 'folder' ? 'folder' : 'file'),
+                    )
+                  "
+                  @click="onSelecte({ id: item.id, type: item.type === 'folder' ? 'folder' : 'file' })"
                 ></checkbox>
                 <uv-icon
                   v-else-if="!isEdit"
@@ -640,7 +711,7 @@ getFolders();
     <!-- 创建文件夹弹窗 -->
     <uv-popup ref="createFolderPopupRef" mode="bottom" :close-on-click-overlay="false" closeable>
       <div class="resources__create-folder-panel">
-        <h3>创建文件夹</h3>
+        <h3 class="font-semibold text-slate-900 text-center">创建文件夹</h3>
         <uv-input
           v-model="folderName"
           :maxlength="12"
@@ -652,6 +723,33 @@ getFolders();
           @click="submitCreateFolder"
           type="primary"
           text="确定"
+          :throttle-time="200"
+          style="margin-top: 16rpx"
+        ></uv-button>
+      </div>
+    </uv-popup>
+
+    <!-- 编辑弹窗 -->
+    <uv-popup
+      ref="editInfoPopupRef"
+      mode="bottom"
+      :close-on-click-overlay="false"
+      :safe-area-inset-bottom="false"
+      closeable
+    >
+      <div class="resources__create-folder-panel">
+        <h3 class="font-semibold text-slate-900 text-center">
+          编辑{{ editInfo.item?.type === 'folder' ? '文件夹' : '文件' }}
+        </h3>
+        <uv-form label-position="left" ref="editInfoFormRef" :model="editInfo" :rules="editInfo.rules">
+          <uv-form-item label="姓名" prop="newName" border-bottom>
+            <uv-input v-model="editInfo.newName" :maxlength="12" border="none" placeholder="请输入名称" clearable />
+          </uv-form-item>
+        </uv-form>
+        <uv-button
+          @click="onEditConfirm"
+          type="primary"
+          text="提交"
           :throttle-time="200"
           style="margin-top: 16rpx"
         ></uv-button>
@@ -677,7 +775,12 @@ getFolders();
     />
     <SelectFolder
       v-model:visible="selectFolderVisible"
-      :disabled-folder-ids="[currentFolder.id]"
+      :disabled-folder-ids="
+        selectedItems
+          .filter((item) => item.type === 'folder')
+          .map((item) => item.id)
+          .concat([currentFolder.id])
+      "
       @select="onMoveToFolder"
     />
   </div>
