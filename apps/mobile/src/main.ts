@@ -1,6 +1,7 @@
 import { createSSRApp } from 'vue';
 import { createI18n } from 'vue-i18n';
 import { createPinia } from 'pinia';
+import VConsole from 'vconsole';
 import { addRequestInterceptor, addResponseInterceptor } from '@/api/core';
 import localeMessages from '@/locale';
 import App from './App.vue';
@@ -9,6 +10,12 @@ import App from './App.vue';
 export function createApp() {
   const app = createSSRApp(App);
   app.use(createPinia());
+
+  if (import.meta.env.VITE_DEV_ENV === 'development') {
+    // eslint-disable-next-line no-new
+    new VConsole();
+  }
+
   const i18n = createI18n({
     legacy: false,
     locale: uni.getLocale(),

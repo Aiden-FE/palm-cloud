@@ -1,12 +1,5 @@
 {
   "pages": [
-    //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-    {
-      "path": "pages/index/index",
-      "style": {
-        "navigationBarTitleText": "uni-app"
-      }
-    },
     {
       "path": "pages/resources/resources",
       "style": {
@@ -27,12 +20,6 @@
       "style": {
         "navigationBarTitleText": "登录"
       }
-    },
-    {
-      "path": "/pages/resource/resource",
-      "style": {
-        "navigationBarTitleText": "文件详情"
-      }
     }
   ],
   "tabBar": {
@@ -43,12 +30,6 @@
     "spacing": "5px",
     "iconWidth": "20px",
     "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "static/images/home.png",
-        "selectedIconPath": "static/images/home_selected.png"
-      },
       {
         "pagePath": "pages/resources/resources",
         "text": "文件",

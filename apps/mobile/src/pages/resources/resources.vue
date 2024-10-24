@@ -7,6 +7,7 @@ import { useContextStore } from '@/stores';
 import { Resources } from '@/api';
 import DropDown from '@/components/drop-down/drop-down.vue';
 import SelectFolder from '@/components/select-folder/select-folder.vue';
+import SelectTags from '@/components/select-tags/select-tags.vue';
 
 const { isLogin } = storeToRefs(useContextStore());
 const list = ref([] as any[]);
@@ -33,11 +34,11 @@ const videoInfo = ref({
 });
 const dropForm = ref({
   filetype: '',
-  tags: '',
+  tags: [] as number[],
 });
 const dropItems = ref([
   {
-    label: '文件类型',
+    label: '按类型搜索',
     key: 'filetype',
     options: [
       {
@@ -59,26 +60,9 @@ const dropItems = ref([
     ],
   },
   {
-    label: '标签',
+    label: '按标签搜索',
     key: 'tags',
-    options: [
-      {
-        label: '全部标签',
-        value: '',
-      },
-      {
-        label: '标签1',
-        value: '1',
-      },
-      {
-        label: '标签2',
-        value: '2',
-      },
-      {
-        label: '标签3',
-        value: '3',
-      },
-    ],
+    disabledPopup: true,
   },
 ]);
 
@@ -178,8 +162,13 @@ const itemActions = reactive({
 });
 
 const selectFolderVisible = ref(false);
+const selectTagsVisible = ref(false);
 
 const currentFolder = computed(() => folderStacks.value[folderStacks.value.length - 1]);
+
+function onSelectTags(ids: number[]) {
+  dropForm.value.tags = ids;
+}
 
 function getList() {
   return Resources.getResourceList({
@@ -250,6 +239,12 @@ function onFilterChange(val: { form: Record<string, any>; key: string; value: an
   getList();
 }
 
+function onDropPopupChange({ key }: { key: string }) {
+  if (key === 'tags') {
+    selectTagsVisible.value = true;
+  }
+}
+
 async function getFolders() {
   const result = await Resources.getFolders({
     folderId: currentFolder.value.id,
@@ -280,13 +275,15 @@ async function submitCreateFolder() {
 }
 
 function onSelecte(data: { id: number; type: 'folder' | 'file' }) {
-  console.log('Debug: ', data);
   selectedItems.value = selectedItems.value.some((item) => item.id === data.id)
     ? selectedItems.value.filter((item) => item.id !== data.id)
     : [...selectedItems.value, data];
 }
 
 function openEdit(item: any) {
+  if (isEdit.value) {
+    return;
+  }
   onSelecte({ id: item.id, type: item.type === 'folder' ? 'folder' : 'file' });
   isEdit.value = true;
 }
@@ -318,6 +315,7 @@ async function onMoveToFolder({ id }: { id: number; item: any }) {
     folderId: id,
   });
   getList();
+  getFolders();
   selectedItems.value = [];
   isEdit.value = false;
   uni.showToast({
@@ -326,7 +324,7 @@ async function onMoveToFolder({ id }: { id: number; item: any }) {
   });
 }
 
-function onSelectAction({ key }: { key: string }) {
+async function onSelectAction({ key }: { key: string }) {
   switch (key) {
     case 'selectAll':
       selectedItems.value = folders.value
@@ -337,9 +335,15 @@ function onSelectAction({ key }: { key: string }) {
       selectFolderVisible.value = true;
       break;
     case 'delete':
-      Resources.deleteResources({
-        ids: selectedItems.value.filter((item) => item.type !== 'folder').map((item) => item.id),
-        folderIds: selectedItems.value.filter((item) => item.type === 'folder').map((item) => item.id),
+      // eslint-disable-next-line no-case-declarations
+      const ids = selectedItems.value.filter((item) => item.type !== 'folder').map((item) => item.id);
+      // eslint-disable-next-line no-case-declarations
+      const folderIds = selectedItems.value.filter((item) => item.type === 'folder').map((item) => item.id);
+      await Resources.deleteResources({
+        ids,
+      });
+      Resources.deleteFolders({
+        ids: folderIds,
       }).then(() => {
         selectedItems.value = [];
         isEdit.value = false;
@@ -389,22 +393,24 @@ function onSelectedAddAction(data: any) {
     case 'uploadImage':
       uni.chooseImage({
         sizeType: 'original',
-        count: 1,
         success: async ({ tempFiles }) => {
           uni.showLoading({
             title: '上传中',
           });
           try {
-            const file = (tempFiles as File[])[0];
-            const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${nanoid(32)}-${file.name}`;
-            const params = {
-              filepath,
-              filename: file.name,
-              folderId: currentFolder.value.id,
-            };
-            const uploadUrl = await Resources.generateUploadUrl(params);
-            await Resources.uploadToMinio({ uploadUrl, file });
-            await Resources.finishUpload(params);
+            await Promise.all(
+              (tempFiles as File[]).map(async (file) => {
+                const filepath = `${folderStacks.value.map((item) => item.id).join('/')}/${nanoid(32)}-${file.name}`;
+                const params = {
+                  filepath,
+                  filename: file.name,
+                  folderId: currentFolder.value.id,
+                };
+                const uploadUrl = await Resources.generateUploadUrl(params);
+                await Resources.uploadToMinio({ uploadUrl, file });
+                await Resources.finishUpload(params);
+              }),
+            );
             getList();
           } finally {
             uni.hideLoading();
@@ -621,11 +627,11 @@ getFolders();
         </view>
       </template>
       <template #right>
-        <template v-if="isEdit">
+        <template v-if="isLogin && isEdit">
           <uv-text text="取消" @click="onSelectAction({ key: 'cancel' })" class="!mr-[16rpx]"></uv-text>
           <uv-text text="操作" @click="onSelectAction({ key: 'more' })"></uv-text>
         </template>
-        <uv-icon v-else @click="openAddActions" name="plus" size="20" color="#6B7280"></uv-icon>
+        <uv-icon v-else-if="isLogin" @click="openAddActions" name="plus" size="20" color="#6B7280"></uv-icon>
       </template>
     </uv-navbar>
     <template v-if="isLogin">
@@ -637,6 +643,7 @@ getFolders();
         height="40px"
         top="64px"
         @change="onFilterChange"
+        @popup-change="onDropPopupChange"
       >
       </DropDown>
       <uv-list @touchmove.stop @touch.stop v-if="folders.concat(list).length">
@@ -692,9 +699,11 @@ getFolders();
       <uv-empty v-else mode="list" style="margin-top: 32rpx" />
     </template>
     <template v-else>
-      <navigator url="/pages/login/login">
-        <button type="button">登录后可用,点击登录</button>
-      </navigator>
+      <uv-empty mode="permission" text="请登录后查看" style="margin-top: 32rpx">
+        <navigator url="/pages/login/login">
+          <uv-button class="mx-4 mt-8" type="primary" plain text="立即登录"></uv-button>
+        </navigator>
+      </uv-empty>
     </template>
 
     <!-- 新增操作菜单 -->
@@ -775,14 +784,10 @@ getFolders();
     />
     <SelectFolder
       v-model:visible="selectFolderVisible"
-      :disabled-folder-ids="
-        selectedItems
-          .filter((item) => item.type === 'folder')
-          .map((item) => item.id)
-          .concat([currentFolder.id])
-      "
+      :disabled-folder-ids="selectedItems.filter((item) => item.type === 'folder').map((item) => item.id)"
       @select="onMoveToFolder"
     />
+    <SelectTags v-model:visible="selectTagsVisible" :default-selected-ids="dropForm.tags" @ok="onSelectTags" />
   </div>
 </template>
 

@@ -12,6 +12,7 @@ import { AppService } from './app.service';
 import { OpenModule } from './open/open.module';
 import { UsersModule } from './users/users.module';
 import { ResourcesModule } from './resources/resources.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ResourcesModule } from './resources/resources.module';
     OpenModule,
     UsersModule,
     ResourcesModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [

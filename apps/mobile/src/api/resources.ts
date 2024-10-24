@@ -126,3 +126,27 @@ export function renameResourceOrFolder(data: { id: number; name: string; type: '
     data,
   });
 }
+
+export function createTag(data: { name: string; color?: string }): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/tags/create',
+    data,
+  });
+}
+
+export function getTags(data?: { keyword?: string }): Promise<any> {
+  return uni.request({
+    method: 'GET',
+    url: '/api/v1/tags',
+    data,
+  });
+}
+
+export function deleteTags(data: { ids: number[] }): Promise<any> {
+  return uni.request({
+    method: 'POST',
+    url: '/api/v1/tags/delete',
+    data,
+  });
+}

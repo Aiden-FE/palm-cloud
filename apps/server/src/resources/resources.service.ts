@@ -71,6 +71,9 @@ export class ResourcesService {
   }
 
   async deleteFolders(params: { ids: number[]; ownerId: string }) {
+    if (!params.ids.length) {
+      return true;
+    }
     const result = await this.mysqlService.client.query(
       'SELECT * FROM resource_folders WHERE parentId IN (?) AND ownerId = ?',
       [params.ids, params.ownerId],
@@ -99,6 +102,9 @@ export class ResourcesService {
   }
 
   async deleteResources(params: { ids: number[]; ownerId: string }) {
+    if (!params.ids.length) {
+      return true;
+    }
     return this.mysqlService.transaction(async (connection) => {
       const result = await connection.query('SELECT * FROM resources WHERE id IN (?) AND ownerId = ?', [
         params.ids,

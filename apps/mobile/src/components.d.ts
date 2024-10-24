@@ -12,5 +12,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SelectFolder: typeof import('./components/select-folder/select-folder.vue')['default']
+    SelectTags: typeof import('./components/select-tags/select-tags.vue')['default']
   }
 }
