@@ -1,6 +1,6 @@
 import { getRequestConfig } from './core';
 
-export function getResourceList(params?: { folderId?: number; filetype?: string }): Promise<any> {
+export function getResourceList(params?: { folderId?: number; filetype?: string; isIntranet?: boolean }): Promise<any> {
   return uni.request({
     method: 'POST',
     url: '/api/v1/resources',
@@ -72,7 +72,12 @@ export function getFolders(data?: { folderId?: number }): Promise<any> {
   });
 }
 
-export function generateUploadUrl(data: { filepath: string; folderId?: number; filename?: string }): Promise<any> {
+export function generateUploadUrl(data: {
+  filepath: string;
+  folderId?: number;
+  filename?: string;
+  isIntranet?: boolean;
+}): Promise<any> {
   return uni.request({
     method: 'POST',
     url: '/api/v1/resources/upload',

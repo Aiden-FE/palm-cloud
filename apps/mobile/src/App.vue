@@ -5,6 +5,7 @@ import { useContextStore } from '@/stores';
 const { updateContext, getContext } = useContextStore();
 
 let token = getContext('token') || localStorage.getItem('token') || '';
+const enabledIntranet = !!localStorage.getItem('enabledIntranet') || false;
 
 if (process.env.NODE_ENV === 'development' && !token && import.meta.env.VITE_DEV_TOKEN) {
   token = import.meta.env.VITE_DEV_TOKEN;
@@ -12,6 +13,7 @@ if (process.env.NODE_ENV === 'development' && !token && import.meta.env.VITE_DEV
 
 updateContext({
   token,
+  enabledIntranet,
 });
 
 onLaunch(() => {});

@@ -106,6 +106,7 @@ export class ResourcesController {
     return this.service.generateUploadUrl({
       filepath: body.filepath,
       ownerId: uid,
+      isIntranet: body.isIntranet,
     });
   }
 
@@ -137,7 +138,7 @@ export class ResourcesController {
   @Post()
   getResourcesList(@Headers('Authorization') token: string, @Body() body: ResourcesBodyDto) {
     const { uid } = this.jwtService.decode(token);
-    return this.service.getResourcesList(uid, body.folderId, body.filetype);
+    return this.service.getResourcesList(uid, body.folderId, body.filetype, body.isIntranet);
   }
 
   @Post('upload/create')

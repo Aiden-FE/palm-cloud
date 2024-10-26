@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsNumberString, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsNumberString, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ResourcesBodyDto {
   @IsOptional()
@@ -8,6 +8,10 @@ export class ResourcesBodyDto {
   @IsOptional()
   @IsString()
   filetype?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isIntranet?: boolean;
 }
 
 export class ResourceInfoBodyDto {
@@ -65,6 +69,10 @@ export class GenerateUploadUrlBodyDto {
   @IsOptional()
   @IsNumber()
   folderId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isIntranet?: boolean;
 }
 
 export class FinishUploadBodyDto extends GenerateUploadUrlBodyDto {}

@@ -140,10 +140,11 @@ export class ResourcesService {
     return { ...result, url };
   }
 
-  async generateUploadUrl(params: { filepath: string; ownerId: string }) {
+  async generateUploadUrl(params: { filepath: string; ownerId: string; isIntranet?: boolean }) {
     const filePath = `resources/upload/${params.ownerId}/${params.filepath}`;
+    const minioClient = params.isIntranet ? this.minioService.intranetClient : this.minioService.client;
     // 1 小时内有效
-    return this.minioService.client.presignedPutObject('palm-cloud', filePath, 60 * 60 * 1);
+    return minioClient.presignedPutObject('palm-cloud', filePath, 60 * 60 * 1);
   }
 
   async getFolders(params: { folderId?: number; ownerId: string }) {
@@ -241,7 +242,7 @@ export class ResourcesService {
     return result;
   }
 
-  async getResourcesList(uid: string, folderId = -1, fileType?: string) {
+  async getResourcesList(uid: string, folderId = -1, fileType?: string, isIntranet = false) {
     let sql = 'SELECT * FROM resources WHERE folderId = ? AND ownerId = ?';
     const params = [folderId, uid];
     if (fileType) {
@@ -252,10 +253,11 @@ export class ResourcesService {
         sql += " AND fileType NOT LIKE '%video%' AND fileType NOT LIKE '%image%'";
       }
     }
+    const minioClient = isIntranet ? this.minioService.intranetClient : this.minioService.client;
     const [result] = await this.mysqlService.client.query(sql, params);
     const resp = [] as any[];
     for (const item of result as any[]) {
-      const url = await this.minioService.client.presignedGetObject(item.bucketName, item.filePath, 60 * 60);
+      const url = await minioClient.presignedGetObject(item.bucketName, item.filePath, 60 * 60);
       resp.push({
         ...item,
         url,

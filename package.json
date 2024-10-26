@@ -9,8 +9,7 @@
     "build:mobile": "cd apps/mobile && yarn build",
     "build:server": "cd apps/server && pnpm build",
     "format": "prettier --write apps",
-    "prepare": "npx simple-git-hooks",
-    "postinstall": "cd apps/mobile && yarn install"
+    "prepare": "npx simple-git-hooks"
   },
   "keywords": [],
   "author": "",

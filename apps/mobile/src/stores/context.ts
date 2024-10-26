@@ -5,12 +5,14 @@ import type { UserInfo } from '@/interfaces';
 interface Context {
   token: string;
   userInfo?: UserInfo;
+  enabledIntranet?: boolean;
 }
 
 const useContextStore = defineStore('context', () => {
   const context = ref<Context>({
     token: '',
     userInfo: undefined,
+    enabledIntranet: false,
   });
 
   const isLogin = computed(() => !!context.value.token);
@@ -19,6 +21,17 @@ const useContextStore = defineStore('context', () => {
     () => context.value.token,
     (token) => {
       localStorage.setItem('token', token);
+    },
+  );
+
+  watch(
+    () => context.value.enabledIntranet,
+    (enabledIntranet) => {
+      if (enabledIntranet) {
+        localStorage.setItem('enabledIntranet', 'true');
+      } else {
+        localStorage.removeItem('enabledIntranet');
+      }
     },
   );
 

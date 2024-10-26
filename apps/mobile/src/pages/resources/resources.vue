@@ -9,7 +9,7 @@ import DropDown from '@/components/drop-down/drop-down.vue';
 import SelectFolder from '@/components/select-folder/select-folder.vue';
 import SelectTags from '@/components/select-tags/select-tags.vue';
 
-const { isLogin } = storeToRefs(useContextStore());
+const { isLogin, context } = storeToRefs(useContextStore());
 const list = ref([] as any[]);
 const folders = ref([] as any[]);
 const imageUrlList = ref<string[]>([]);
@@ -174,6 +174,7 @@ function getList() {
   return Resources.getResourceList({
     filetype: dropForm.value.filetype,
     folderId: currentFolder.value.id,
+    isIntranet: context.value.enabledIntranet,
   })
     .then((res) => {
       list.value = res || [];
@@ -405,6 +406,7 @@ function onSelectedAddAction(data: any) {
                   filepath,
                   filename: file.name,
                   folderId: currentFolder.value.id,
+                  isIntranet: context.value.enabledIntranet,
                 };
                 const uploadUrl = await Resources.generateUploadUrl(params);
                 await Resources.uploadToMinio({ uploadUrl, file });
@@ -465,6 +467,7 @@ function onSelectedAddAction(data: any) {
               filepath,
               filename: file.name,
               folderId: currentFolder.value.id,
+              isIntranet: context.value.enabledIntranet,
             };
             const uploadUrl = await Resources.generateUploadUrl(params);
             await Resources.uploadToMinio({ uploadUrl, file });
@@ -490,6 +493,7 @@ function onSelectedAddAction(data: any) {
               filepath,
               filename: file.name,
               folderId: currentFolder.value.id,
+              isIntranet: context.value.enabledIntranet,
             };
             const uploadUrl = await Resources.generateUploadUrl(params);
             await Resources.uploadToMinio({ uploadUrl, file });
