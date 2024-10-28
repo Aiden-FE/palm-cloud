@@ -23,7 +23,7 @@ const rules = {
 };
 
 if (isLogin.value) {
-  uni.switchTab({ url: '/pages/index/index' });
+  uni.switchTab({ url: '/pages/resources/resources' });
 }
 
 function getImgCaptcha() {
